@@ -1,5 +1,3 @@
-"use node";
-
 import { v } from "convex/values";
 import { query, mutation, action } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
@@ -11,6 +9,8 @@ export const searchImages = action({
     page: v.optional(v.union(v.number(), v.string())), // allow 'last'
   },
   handler: async (_ctx, args) => {
+    "use node";
+
     const query = encodeURIComponent(args.query);
     const perProvider = args.perProvider ?? 20;
     const page = args.page ?? 1;
