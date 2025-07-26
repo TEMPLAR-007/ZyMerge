@@ -1,7 +1,7 @@
 export default {
     providers: [
         {
-            domain: process.env.SITE_URL,
+            domain: "https://media-hub-dev.vercel.app",
             applicationID: "convex",
         },
     ],
