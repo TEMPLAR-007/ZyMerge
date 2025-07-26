@@ -2,6 +2,19 @@ import { v } from "convex/values";
 import { query, mutation, action } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
+// Debug function to check authentication
+export const debugAuth = query({
+  args: {},
+  returns: v.union(v.object({
+    tokenIdentifier: v.string(),
+    subject: v.string(),
+  }), v.null()),
+  handler: async (ctx) => {
+    console.log("server identity", await ctx.auth.getUserIdentity());
+    return await ctx.auth.getUserIdentity();
+  },
+});
+
 export const searchImages = action({
   args: {
     query: v.string(),
