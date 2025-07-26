@@ -1,18 +1,19 @@
+"use node";
+
 import { v } from "convex/values";
 import { query, mutation, action } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
-"use node";
 export const searchImages = action({
   args: {
     query: v.string(),
     perProvider: v.optional(v.number()),
     page: v.optional(v.union(v.number(), v.string())), // allow 'last'
   },
-  handler: async (ctx, args) => {
+  handler: async (_ctx, args) => {
     const query = encodeURIComponent(args.query);
     const perProvider = args.perProvider ?? 20;
-    let page = args.page ?? 1;
+    const page = args.page ?? 1;
 
     // Read API keys from environment variables
     const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
@@ -28,7 +29,7 @@ export const searchImages = action({
       // Fetch first page with per_page=1 to get total counts
       const [unsplash, pexels, pixabay] = await Promise.all([
         fetch(`https://api.unsplash.com/search/photos?query=${query}&per_page=1&page=1`, {
-          headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` as string },
+          headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` },
         })
           .then(async (res) => (res.ok ? res.json() : { total: 0 }))
           .then((data) => Math.ceil((data.total || 0) / perProvider)),
@@ -58,7 +59,7 @@ export const searchImages = action({
     const unsplashPromise = fetch(
       `https://api.unsplash.com/search/photos?query=${query}&per_page=${perProvider}&page=${unsplashPage}`,
       {
-        headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` as string },
+        headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` },
       }
     )
       .then(async (res: Response) => {
