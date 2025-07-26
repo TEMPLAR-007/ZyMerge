@@ -9,7 +9,7 @@ export default tseslint.config(
     ignores: [
       "dist",
       "eslint.config.js",
-      "convex/_generated",
+      "convex",
       "postcss.config.js",
       "tailwind.config.js",
       "vite.config.ts",
