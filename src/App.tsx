@@ -37,8 +37,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
-        currentView={currentView} 
+      <Header
+        currentView={currentView}
         setCurrentView={handleViewChange}
         onSignInClick={() => setSignInModal(true)}
       />
@@ -65,7 +65,7 @@ export default function App() {
         {currentView === "favorites" && (
           <Unauthenticated>
             <div className="container mx-auto px-4 py-8">
-              <SignInForm 
+              <SignInForm
                 title="Access Your Favorites"
                 description="Sign in to view and manage your saved images"
               />
@@ -77,7 +77,7 @@ export default function App() {
       <SignInModal
         isOpen={signInModal}
         onClose={() => setSignInModal(false)}
-        title="Sign in to ZyMrge"
+        title="Sign in to ZyMerge"
         message="Where creators connect and content flows. Sign in to save your favorite images and access them across all your devices."
       />
     </div>

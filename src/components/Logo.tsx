@@ -63,7 +63,7 @@ export function Logo({ className, size = "md", showText = true }: LogoProps) {
 
       {showText && (
         <span className={cn(textSizeClasses[size], "font-bold text-blue-400")}>
-          ZyMrge
+          ZyMerge
         </span>
       )}
     </div>
@@ -89,15 +89,15 @@ export function CustomLogo({ className, size = "md", showText = true }: LogoProp
   return (
     <div className={cn("flex items-center space-x-2", className)}>
       {/* Your custom logo */}
-      <img 
-        src="/images/zy-removebg-preview.png" 
-        alt="ZyMrge Logo"
+      <img
+        src="/images/zy-removebg-preview.png"
+        alt="ZyMerge Logo"
         className={cn(sizeClasses[size], "object-contain")}
       />
 
       {showText && (
         <span className={cn(textSizeClasses[size], "font-bold text-blue-400")}>
-          ZyMrge
+          ZyMerge
         </span>
       )}
     </div>

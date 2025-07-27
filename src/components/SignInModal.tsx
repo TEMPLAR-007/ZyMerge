@@ -26,7 +26,7 @@ interface SignInModalProps {
 export function SignInModal({
   isOpen,
   onClose,
-  title = "Sign in to ZyMrge",
+  title = "Sign in to ZyMerge",
   message = "",
   pendingAction = null
 }: SignInModalProps) {

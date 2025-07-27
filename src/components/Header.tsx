@@ -18,11 +18,16 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 sm:h-16 items-center justify-between px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="flex items-center space-x-2 sm:space-x-3">
-          <CustomLogo size="sm" className="sm:hidden" showText={false} />
-          <CustomLogo size="md" className="hidden sm:flex" />
-          <span className="hidden xs:inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:ring-blue-400/30">
-            Beta
-          </span>
+          <button
+            onClick={() => setCurrentView("home")}
+            className="flex items-center space-x-2 sm:space-x-3 hover:opacity-80 transition-opacity cursor-pointer"
+          >
+            <CustomLogo size="sm" className="sm:hidden" showText={false} />
+            <CustomLogo size="md" className="hidden sm:flex" />
+            <span className="hidden xs:inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:ring-blue-400/30">
+              Beta
+            </span>
+          </button>
         </div>
 
         <div className="flex items-center space-x-1 sm:space-x-2">

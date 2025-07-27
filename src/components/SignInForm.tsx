@@ -16,7 +16,7 @@ interface SignInFormProps {
 export function SignInForm({
   showHeader = true,
   showCard = true,
-  title = "ZyMrge",
+  title = "ZyMerge",
   description = "Where creators connect and content flows"
 }: SignInFormProps) {
   const { signIn } = useAuthActions();

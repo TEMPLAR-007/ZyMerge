@@ -82,9 +82,9 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
             <section className="py-16 px-4 bg-gray-900/50">
                 <div className="container mx-auto max-w-6xl">
                     <div>
-                        <h2 className="text-3xl font-bold text-center mb-12">Why Choose ZyMrge?</h2>
+                        <h2 className="text-3xl font-bold text-center mb-12">Why Choose ZyMerge?</h2>
                         <div className="grid md:grid-cols-3 gap-8">
-                            <Card className="border-gray-700 hover:shadow-lg hover:scale-105 transition-all duration-300">
+                            <Card className="border-gray-700 hover:shadow-lg hover:scale-105 transition-all duration-300" style={{ backgroundColor: '#171717' }}>
                                 <CardHeader>
                                     <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mb-4 hover:scale-110 transition-transform duration-200">
                                         <Search className="h-6 w-6 text-blue-400" />
@@ -96,7 +96,7 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
                                 </CardHeader>
                             </Card>
 
-                            <Card className="border-gray-700 hover:shadow-lg hover:scale-105 transition-all duration-300">
+                            <Card className="border-gray-700 hover:shadow-lg hover:scale-105 transition-all duration-300" style={{ backgroundColor: '#171717' }}>
                                 <CardHeader>
                                     <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mb-4 hover:scale-110 transition-transform duration-200">
                                         <Heart className="h-6 w-6 text-green-400" />
@@ -108,7 +108,7 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
                                 </CardHeader>
                             </Card>
 
-                            <Card className="border-gray-700 hover:shadow-lg hover:scale-105 transition-all duration-300">
+                            <Card className="border-gray-700 hover:shadow-lg hover:scale-105 transition-all duration-300" style={{ backgroundColor: '#171717' }}>
                                 <CardHeader>
                                     <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4 hover:scale-110 transition-transform duration-200">
                                         <Zap className="h-6 w-6 text-purple-400" />
@@ -175,7 +175,7 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
 
                         <div className="text-center sm:text-right">
                             <p className="text-xs text-muted-foreground">
-                                &copy; {new Date().getFullYear()} ZyMrge. Built with ❤️ by <span className="text-blue-400 font-medium">Arefin Khan</span>
+                                &copy; {new Date().getFullYear()} ZyMerge. Built with ❤️ by <span className="text-blue-400 font-medium">Arefin Khan</span>
                             </p>
                         </div>
                     </div>
