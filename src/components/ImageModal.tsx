@@ -1047,7 +1047,13 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                             {/* Favorite Button */}
                             {showFavoriteButton && (
                                 <button
-                                    onClick={onToggleFavorite}
+                                    onClick={() => {
+                                        if (!isAuthenticated && onSignInRequired) {
+                                            onSignInRequired();
+                                        } else {
+                                            onToggleFavorite();
+                                        }
+                                    }}
                                     disabled={isLoading}
                                     className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${isLoading
                                         ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-50'

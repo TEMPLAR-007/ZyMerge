@@ -5,6 +5,9 @@ import { api } from "../../convex/_generated/api";
 import { ImageGrid } from "./ImageGrid";
 import { ImageModal } from "./ImageModal";
 import { ConfirmationModal } from "./ConfirmationModal";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Heart, Image as ImageIcon, Loader2 } from "lucide-react";
 
 export function FavoritesView() {
   const { isAuthenticated } = useConvexAuth();
@@ -67,27 +70,78 @@ export function FavoritesView() {
     creditUrl: fav.creditUrl
   }));
 
+  // Show loading state while favorites are being fetched
+  if (favorites === undefined) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <Card className="mb-8">
+          <CardHeader className="text-center">
+            <div className="flex items-center justify-center space-x-2 mb-2">
+              <Heart className="h-8 w-8 text-primary" />
+              <CardTitle className="text-3xl">My Favorites</CardTitle>
+            </div>
+            <CardDescription className="text-lg">
+              Your saved images from Unsplash, Pexels, and Pixabay
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="animate-fade-in-up" style={{ animationDelay: `${i * 0.03}s` }}>
+              <div className="aspect-square bg-gray-800 rounded-lg loading-skeleton"></div>
+              <div className="mt-2 h-4 bg-gray-800 rounded loading-skeleton"></div>
+              <div className="mt-1 h-3 bg-gray-800 rounded w-2/3 loading-skeleton"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold mb-8 text-center">My Favorites</h2>
-      <p className="text-center mb-8 text-gray-600 dark:text-gray-400">
-        Your saved images from Unsplash, Pexels, and Pixabay
-      </p>
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <Card className="mb-8 animate-fade-in-up">
+        <CardHeader className="text-center">
+          <div className="flex items-center justify-center space-x-2 mb-2">
+            <Heart className="h-8 w-8 text-primary" />
+            <CardTitle className="text-3xl">My Favorites</CardTitle>
+          </div>
+          <CardDescription className="text-lg">
+            Your saved images from Unsplash, Pexels, and Pixabay
+          </CardDescription>
+          <div className="flex items-center justify-center space-x-2 mt-4">
+            <Badge variant="secondary" className="hover:scale-105 transition-transform duration-200">
+              {favorites.length} images saved
+            </Badge>
+          </div>
+        </CardHeader>
+      </Card>
 
       {favorites.length === 0 ? (
-        <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
-          You haven't saved any images yet. Start searching and adding favorites!
-        </div>
+        <Card className="mt-8 animate-fade-in-up">
+          <CardContent className="pt-6 text-center">
+            <Heart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground mb-2">
+              You haven't saved any images yet.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Start searching and adding favorites to see them here!
+            </p>
+          </CardContent>
+        </Card>
       ) : (
-        <ImageGrid
-          images={favoriteImages}
-          favorites={favorites}
-          onToggleFavorite={handleRemoveFavorite}
-          onImageClick={handleImageClick}
-          showRemoveButton={true}
-          isLoading={isRemoving}
-          loadingImageId={removingImageId}
-        />
+        <div className="animate-fade-in-up">
+          <ImageGrid
+            images={favoriteImages}
+            favorites={favorites}
+            onToggleFavorite={handleRemoveFavorite}
+            onImageClick={handleImageClick}
+            showRemoveButton={true}
+            isLoading={isRemoving}
+            loadingImageId={removingImageId}
+          />
+        </div>
       )}
 
       <ImageModal

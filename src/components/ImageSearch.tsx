@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAction, useQuery, useMutation } from "convex/react";
 import { useConvexAuth } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -7,6 +7,11 @@ import { Pagination } from "./Pagination";
 import { ImageModal } from "./ImageModal";
 import { ConfirmationModal } from "./ConfirmationModal";
 import { SignInModal } from "./SignInModal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Search, Image as ImageIcon, AlertCircle, Loader2 } from "lucide-react";
 
 export function ImageSearch() {
   const [query, setQuery] = useState("");
@@ -19,12 +24,18 @@ export function ImageSearch() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [togglingImageId, setTogglingImageId] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
   const [confirmationModal, setConfirmationModal] = useState<{
     isOpen: boolean;
     image: any;
     action: 'add' | 'remove';
   }>({ isOpen: false, image: null, action: 'add' });
   const [signInModal, setSignInModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    image: any;
+    action: 'add' | 'remove';
+  } | null>(null);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const { isAuthenticated } = useConvexAuth();
 
@@ -33,12 +44,27 @@ export function ImageSearch() {
   const addFavorite = useMutation(api.myFunctions.addFavorite);
   const removeFavorite = useMutation(api.myFunctions.removeFavorite);
 
+  // Listen for authentication changes and resume pending actions
+  useEffect(() => {
+    if (isAuthenticated && pendingAction) {
+      // User just signed in, resume the pending action
+      void confirmToggleFavorite(pendingAction.image, pendingAction.action).then(() => {
+        // Show success message
+        setShowSuccessMessage(true);
+        setTimeout(() => setShowSuccessMessage(false), 3000); // Hide after 3 seconds
+      });
+      setPendingAction(null);
+      setSignInModal(false);
+    }
+  }, [isAuthenticated, pendingAction]);
+
   const handleSearch = async (e: React.FormEvent, page: number | string = 1) => {
     e.preventDefault();
     if (!query.trim()) return;
 
     setLoading(true);
     setError(null);
+    setHasSearched(true);
     try {
       const results = await searchImages({
         query: query.trim(),
@@ -71,6 +97,8 @@ export function ImageSearch() {
   const handleToggleFavorite = (img: any) => {
     // Check if user is authenticated
     if (!isAuthenticated) {
+      // Store the pending action and show sign in modal
+      setPendingAction({ image: img, action: 'add' });
       setSignInModal(true);
       return;
     }
@@ -110,9 +138,8 @@ export function ImageSearch() {
           creditUrl: img.creditUrl,
         });
       }
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
-      alert('Failed to update favorite. Please try again.');
+    } catch (err: any) {
+      console.error('Error toggling favorite:', err);
     } finally {
       setIsTogglingFavorite(false);
       setTogglingImageId(null);
@@ -137,65 +164,188 @@ export function ImageSearch() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold mb-8 text-center">Image Search</h2>
-      <p className="text-center mb-8 text-gray-600 dark:text-gray-400">
-        Search for images from Unsplash, Pexels, and Pixabay
-      </p>
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg animate-fade-in-up">
+          <div className="flex items-center space-x-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Image added to favorites!</span>
+          </div>
+        </div>
+      )}
 
-      <form onSubmit={handleNewSearch} className="mb-8 flex gap-2 justify-center items-center">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search for images..."
-          className="bg-light dark:bg-dark text-dark dark:text-light rounded-md p-3 border-2 border-slate-200 dark:border-slate-800 w-80"
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-dark dark:bg-light text-light dark:text-dark rounded-md px-6 py-3 disabled:opacity-50"
-        >
-          {loading ? "Searching..." : "Search"}
-        </button>
-      </form>
+      <Card className="mb-8 animate-fade-in-up">
+        <CardHeader className="text-center">
+          <div className="flex items-center justify-center space-x-2 mb-2">
+            <svg
+              className="h-8 w-8 text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3 9C3 7.89543 3.89543 7 5 7H19C20.1046 7 21 7.89543 21 9V15C21 16.1046 20.1046 17 19 17H5C3.89543 17 3 16.1046 3 15V9Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="animate-pulse"
+              />
+              <circle
+                cx="8"
+                cy="12"
+                r="2"
+                fill="currentColor"
+                className="animate-bounce"
+                style={{ animationDelay: '0.1s' }}
+              />
+              <circle
+                cx="16"
+                cy="12"
+                r="2"
+                fill="currentColor"
+                className="animate-bounce"
+                style={{ animationDelay: '0.3s' }}
+              />
+              <path
+                d="M8 12H16"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                className="animate-pulse"
+                style={{ animationDelay: '0.2s' }}
+              />
+            </svg>
+            <CardTitle className="text-3xl text-blue-400">Discover Images</CardTitle>
+          </div>
+          <CardDescription className="text-lg">
+            Find the perfect image from multiple sources
+          </CardDescription>
+
+          {/* Dynamic Image Sources Section */}
+          <div className="mt-6">
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <div className="flex items-center space-x-2">
+                <Badge variant="secondary" className="px-3 py-1 hover:scale-105 transition-transform duration-200">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  Unsplash
+                </Badge>
+                <Badge variant="secondary" className="px-3 py-1 hover:scale-105 transition-transform duration-200">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                  Pexels
+                </Badge>
+                <Badge variant="secondary" className="px-3 py-1 hover:scale-105 transition-transform duration-200">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                  Pixabay
+                </Badge>
+              </div>
+              <div className="flex items-center text-xs text-muted-foreground">
+                <span className="mr-1">•</span>
+                <span>More sources coming soon</span>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleNewSearch} className="flex gap-3 max-w-2xl mx-auto">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="What are you looking for?"
+                className="pl-10 hover:shadow-md transition-shadow duration-200"
+                disabled={loading}
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={loading || !query.trim()}
+              className="hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Search className="mr-2 h-4 w-4" />
+                  Search
+                </>
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       {error && (
-        <div className="text-red-500 text-center mb-4 p-3 bg-red-100 dark:bg-red-900/20 rounded-md">
-          {error}
-        </div>
+        <Card className="mb-6 border-destructive animate-fade-in-up">
+          <CardContent className="pt-6">
+            <div className="flex items-center space-x-2 text-destructive">
+              <AlertCircle className="h-4 w-4" />
+              <span>{error}</span>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {pagination && (
-        <div className="mb-4 text-center text-sm text-gray-600 dark:text-gray-400">
-          Showing {images.length} of {pagination.totalImages} images from Unsplash, Pexels, and Pixabay
-          {pagination.totalPages > 1 && (
-            <span> • Page {pagination.currentPage} of {pagination.totalPages}</span>
-          )}
+        <div className="mb-6 text-center animate-fade-in-up">
+          <p className="text-sm text-muted-foreground">
+            Found {pagination.totalImages.toLocaleString()} images
+            {pagination.totalPages > 1 && (
+              <span> • Page {pagination.currentPage} of {pagination.totalPages}</span>
+            )}
+          </p>
         </div>
       )}
 
-      <ImageGrid
-        images={images}
-        favorites={favorites}
-        onToggleFavorite={handleToggleFavorite}
-        onImageClick={handleImageClick}
-        isLoading={isTogglingFavorite}
-        loadingImageId={togglingImageId}
-      />
-
-      {pagination && (
-        <Pagination
-          pagination={pagination}
-          loading={loading}
-          onPageChange={handlePageChange}
-        />
+      {loading && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="animate-fade-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
+              <div className="aspect-square bg-gray-800 rounded-lg loading-skeleton"></div>
+              <div className="mt-2 h-4 bg-gray-800 rounded loading-skeleton"></div>
+              <div className="mt-1 h-3 bg-gray-800 rounded w-2/3 loading-skeleton"></div>
+            </div>
+          ))}
+        </div>
       )}
 
-      {images.length === 0 && !loading && query && (
-        <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
-          No images found for "{query}"
+      {!loading && (
+        <div className="animate-fade-in-up">
+          <ImageGrid
+            images={images}
+            favorites={favorites}
+            onToggleFavorite={handleToggleFavorite}
+            onImageClick={handleImageClick}
+            isLoading={isTogglingFavorite}
+            loadingImageId={togglingImageId}
+          />
         </div>
+      )}
+
+      {pagination && !loading && (
+        <div className="animate-fade-in-up">
+          <Pagination
+            pagination={pagination}
+            loading={loading}
+            onPageChange={handlePageChange}
+          />
+        </div>
+      )}
+
+      {images.length === 0 && !loading && query && hasSearched && (
+        <Card className="mt-8 animate-fade-in-up">
+          <CardContent className="pt-6 text-center">
+            <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">
+              No images found for "{query}"
+            </p>
+          </CardContent>
+        </Card>
       )}
 
       <ImageModal
@@ -205,9 +355,14 @@ export function ImageSearch() {
         isFavorited={selectedImage ? isImageFavorited(selectedImage) : false}
         onToggleFavorite={() => selectedImage && handleToggleFavorite(selectedImage)}
         isLoading={isTogglingFavorite && selectedImage && togglingImageId === String(selectedImage.id)}
-        showFavoriteButton={isAuthenticated}
+        showFavoriteButton={true}
         isAuthenticated={isAuthenticated}
-        onSignInRequired={() => setSignInModal(true)}
+        onSignInRequired={() => {
+          if (selectedImage) {
+            setPendingAction({ image: selectedImage, action: 'add' });
+          }
+          setSignInModal(true);
+        }}
       />
 
       <ConfirmationModal
@@ -228,8 +383,7 @@ export function ImageSearch() {
       <SignInModal
         isOpen={signInModal}
         onClose={() => setSignInModal(false)}
-        title="Sign in to save favorites"
-        message="Create an account or sign in to save your favorite images and access them anytime."
+        pendingAction={pendingAction}
       />
     </div>
   );
