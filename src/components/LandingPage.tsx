@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Heart, Zap, Shield, Palette, Download } from "lucide-react";
+import { Search, Heart, Zap } from "lucide-react";
 
 interface LandingPageProps {
     onNavigateToSearch?: () => void;

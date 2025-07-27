@@ -82,6 +82,7 @@ export function SignInForm() {
         } else if (errorMessage.includes("invalid credentials") || errorMessage.includes("wrong password")) {
           userFriendlyError = "Invalid email or password. Please check your credentials.";
           setFieldErrors(prev => ({
+            ...prev,
             email: "Invalid email or password",
             password: "Invalid email or password"
           }));

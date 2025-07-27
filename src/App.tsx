@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { Header } from "./components/Header";
 import { SignInForm } from "./components/SignInForm";

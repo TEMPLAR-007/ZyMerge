@@ -7,7 +7,7 @@ import { ImageModal } from "./ImageModal";
 import { ConfirmationModal } from "./ConfirmationModal";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Heart } from "lucide-react";
 
 export function FavoritesView() {
   const { isAuthenticated } = useConvexAuth();

@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, AlertCircle, Info } from "lucide-react";
+import { AlertTriangle, Info } from "lucide-react";
 
 interface ConfirmationModalProps {
   isOpen: boolean;
