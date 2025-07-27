@@ -6,7 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Mail, Lock, AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 
-export function SignInForm() {
+interface SignInFormProps {
+  showHeader?: boolean;
+  showCard?: boolean;
+  title?: string;
+  description?: string;
+}
+
+export function SignInForm({
+  showHeader = true,
+  showCard = true,
+  title = "ZyMrge",
+  description = "Where creators connect and content flows"
+}: SignInFormProps) {
   const { signIn } = useAuthActions();
   const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +76,7 @@ export function SignInForm() {
       if (error.message) {
         const errorMessage = error.message.toLowerCase();
 
-        if (errorMessage.includes("invalid email") || errorMessage.includes("email")) {
+        if (errorMessage.includes("invalid email") || errorMessage.includes("email format")) {
           userFriendlyError = "Please enter a valid email address.";
           setFieldErrors(prev => ({ ...prev, email: "Please enter a valid email address" }));
         } else if (errorMessage.includes("password") && errorMessage.includes("weak")) {
@@ -105,125 +117,141 @@ export function SignInForm() {
     }
   };
 
+  const formFields = (
+    <div className="space-y-4">
+      <form
+        className="space-y-4"
+        onSubmit={(e) => void handleSubmit(e)}
+      >
+        <div className="space-y-2">
+          <div className="relative">
+            <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              className={`pl-10 ${fieldErrors.email ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+              type="email"
+              name="email"
+              placeholder="Email"
+              required
+              disabled={isLoading}
+            />
+          </div>
+          {fieldErrors.email && (
+            <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {fieldErrors.email}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <div className="relative">
+            <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              className={`pl-10 pr-10 ${fieldErrors.password ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              required
+              disabled={isLoading}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1 h-8 w-8 p-0 hover:bg-transparent"
+              onClick={() => setShowPassword(!showPassword)}
+              disabled={isLoading}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <Eye className="h-4 w-4 text-muted-foreground" />
+              )}
+            </Button>
+          </div>
+          {fieldErrors.password && (
+            <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {fieldErrors.password}
+            </p>
+          )}
+        </div>
+
+        <Button
+          type="submit"
+          className="w-full h-11 text-base font-medium"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {flow === "signIn" ? "Signing in..." : "Signing up..."}
+            </>
+          ) : (
+            flow === "signIn" ? "Sign in" : "Sign up"
+          )}
+        </Button>
+      </form>
+
+      <div className="flex items-center justify-center gap-1 text-sm">
+        <span className="text-muted-foreground">
+          {flow === "signIn"
+            ? "No account?"
+            : "Have an account?"}
+        </span>
+        <Button
+          variant="link"
+          className="p-0 h-auto font-normal text-primary hover:text-primary/80"
+          onClick={() => {
+            setFlow(flow === "signIn" ? "signUp" : "signIn");
+            setError(null);
+          }}
+          disabled={isLoading}
+        >
+          {flow === "signIn" ? "Sign up" : "Sign in"}
+        </Button>
+      </div>
+
+      {error && (
+        <div className="flex items-start space-x-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 text-sm">
+          <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-medium text-red-800 dark:text-red-200 mb-1">
+              {flow === "signIn" ? "Sign In Failed" : "Sign Up Failed"}
+            </p>
+            <p className="text-red-700 dark:text-red-300">
+              {error}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  if (!showCard) {
+    return (
+      <div className="w-full max-w-md mx-auto">
+        {formFields}
+      </div>
+    );
+  }
+
   return (
     <div className="flex justify-center items-center min-h-[400px]">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl">Media Hub</CardTitle>
-            <Badge variant="secondary">Beta</Badge>
-          </div>
-          <CardDescription>
-            Search and save your favorite images
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <form
-            className="space-y-4"
-            onSubmit={handleSubmit}
-          >
-            <div className="space-y-2">
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  className={`pl-10 ${fieldErrors.email ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                  type="email"
-                  name="email"
-                  placeholder="Email"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              {fieldErrors.email && (
-                <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {fieldErrors.email}
-                </p>
-              )}
+        {showHeader && (
+          <CardHeader className="space-y-1">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-2xl">{title}</CardTitle>
+              <Badge variant="secondary">Beta</Badge>
             </div>
-
-            <div className="space-y-2">
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  className={`pl-10 pr-10 ${fieldErrors.password ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder="Password"
-                  required
-                  disabled={isLoading}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-1 top-1 h-8 w-8 p-0 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </Button>
-              </div>
-              {fieldErrors.password && (
-                <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {fieldErrors.password}
-                </p>
-              )}
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full h-11 text-base font-medium"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {flow === "signIn" ? "Signing in..." : "Signing up..."}
-                </>
-              ) : (
-                flow === "signIn" ? "Sign in" : "Sign up"
-              )}
-            </Button>
-          </form>
-
-          <div className="flex items-center justify-center gap-1 text-sm">
-            <span className="text-muted-foreground">
-              {flow === "signIn"
-                ? "No account?"
-                : "Have an account?"}
-            </span>
-            <Button
-              variant="link"
-              className="p-0 h-auto font-normal text-primary hover:text-primary/80"
-              onClick={() => {
-                setFlow(flow === "signIn" ? "signUp" : "signIn");
-                setError(null);
-              }}
-              disabled={isLoading}
-            >
-              {flow === "signIn" ? "Sign up" : "Sign in"}
-            </Button>
-          </div>
-
-          {error && (
-            <div className="flex items-start space-x-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 text-sm">
-              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="font-medium text-red-800 dark:text-red-200 mb-1">
-                  {flow === "signIn" ? "Sign In Failed" : "Sign Up Failed"}
-                </p>
-                <p className="text-red-700 dark:text-red-300">
-                  {error}
-                </p>
-              </div>
-            </div>
-          )}
+            <CardDescription>
+              {description}
+            </CardDescription>
+          </CardHeader>
+        )}
+        <CardContent className={showHeader ? '' : 'pt-6'}>
+          {formFields}
         </CardContent>
       </Card>
     </div>

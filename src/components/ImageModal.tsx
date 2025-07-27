@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
+import { AlertTriangle, X } from "lucide-react";
 
-// Add custom slider styles
 const sliderStyles = `
   .slider::-webkit-slider-thumb {
     appearance: none;
@@ -76,6 +76,23 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
     const [showCropOverlay, setShowCropOverlay] = useState(false);
     const [dragMode, setDragMode] = useState<'move' | 'resize' | 'create'>('create');
     const [activeHandle, setActiveHandle] = useState<string | null>(null);
+    const [showMobileWarning, setShowMobileWarning] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    // Mobile detection and warning
+    useEffect(() => {
+        const checkMobile = () => {
+            const isMobileDevice = window.innerWidth < 768; // md breakpoint
+            setIsMobile(isMobileDevice);
+            if (isMobileDevice && isOpen && !localStorage.getItem('hideMobileImageModalWarning')) {
+                setShowMobileWarning(true);
+            }
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, [isOpen]);
 
     useEffect(() => {
         if (!isOpen || !image) return;
@@ -113,7 +130,6 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
         };
     }, [isOpen, onClose]);
 
-    // Get base dimensions without scaling
     const getBaseDimensions = () => {
         if (!imageSize.width || !imageSize.height) return { width: 600, height: 400 };
 
@@ -135,7 +151,6 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
         }
     };
 
-    // Get display dimensions with scaling applied (for image element size)
     const getDisplayDimensions = () => {
         const base = getBaseDimensions();
         const scaleFactor = scalePercent / 100;
@@ -145,16 +160,11 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
         };
     };
 
-    // Get final output dimensions with scaling and cropping applied (for download/display info)
     const getFinalDimensions = () => {
         const base = getBaseDimensions();
         const scaleFactor = scalePercent / 100;
-
-        // Apply cropping to the base dimensions
         const croppedWidth = (base.width * cropSettings.width) / 100;
         const croppedHeight = (base.height * cropSettings.height) / 100;
-
-        // Then apply scaling
         return {
             width: Math.round(croppedWidth * scaleFactor),
             height: Math.round(croppedHeight * scaleFactor)
@@ -171,7 +181,6 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
             display: 'block'
         };
 
-        // Only apply crop if it's actually cropped
         const isCropped = cropSettings.x > 0 || cropSettings.y > 0 ||
             cropSettings.width < 100 || cropSettings.height < 100;
 
@@ -185,7 +194,6 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
     const handleDownload = async () => {
         if (!image || !imageSize.width || !imageSize.height || isDownloading) return;
 
-        // Check if user is authenticated for download
         if (!isAuthenticated && onSignInRequired) {
             onSignInRequired();
             return;
@@ -193,53 +201,39 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
 
         setIsDownloading(true);
         try {
-            // Create a canvas to render the resized/cropped image
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             if (!ctx) return;
 
             const finalDimensions = getFinalDimensions();
-
-            // Set canvas size to final dimensions
             canvas.width = finalDimensions.width;
             canvas.height = finalDimensions.height;
 
-            // Load the original image
             const img = new Image();
-            img.crossOrigin = 'anonymous'; // Handle CORS
+            img.crossOrigin = 'anonymous';
 
             img.onload = () => {
-                // Calculate crop dimensions in pixels from the original image
                 const cropX = (cropSettings.x / 100) * img.naturalWidth;
                 const cropY = (cropSettings.y / 100) * img.naturalHeight;
                 const cropWidth = (cropSettings.width / 100) * img.naturalWidth;
                 const cropHeight = (cropSettings.height / 100) * img.naturalHeight;
 
-                // Calculate the proper output dimensions
-                // First get the base dimensions for the selected size mode
                 const baseDimensions = getBaseDimensions();
-
-                // Then calculate what the cropped base dimensions would be
                 const croppedBaseWidth = (baseDimensions.width * cropSettings.width) / 100;
                 const croppedBaseHeight = (baseDimensions.height * cropSettings.height) / 100;
 
-                // Apply the scale factor to get final output dimensions
                 const scaleFactor = scalePercent / 100;
                 const outputWidth = Math.round(croppedBaseWidth * scaleFactor);
                 const outputHeight = Math.round(croppedBaseHeight * scaleFactor);
 
-                // Set canvas to the correct output dimensions
                 canvas.width = outputWidth;
                 canvas.height = outputHeight;
-
-                // Draw the cropped portion of the original image, scaled to output size
                 ctx.drawImage(
                     img,
-                    cropX, cropY, cropWidth, cropHeight, // Source: crop area from original image
-                    0, 0, outputWidth, outputHeight // Destination: final output size
+                    cropX, cropY, cropWidth, cropHeight,
+                    0, 0, outputWidth, outputHeight
                 );
 
-                // Convert canvas to blob and download
                 canvas.toBlob((blob) => {
                     if (!blob) return;
 
@@ -255,14 +249,11 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
             };
 
             img.onerror = () => {
-                console.error('Failed to load image for download');
-                // Fallback to original download
                 void fallbackDownload();
             };
 
             img.src = image.url;
-        } catch (error) {
-            console.error('Download failed:', error);
+        } catch {
             void fallbackDownload();
         } finally {
             setIsDownloading(false);
@@ -283,18 +274,16 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error('Fallback download failed:', error);
+        } catch {
+            // Fallback download failed - silent fail
         }
     };
 
     const updateCustomFromCurrent = () => {
         const current = getFinalDimensions();
-        // Set custom dimensions to the final size and reset scale to 100%
-        // This prevents the feedback loop where scaled dimensions get scaled again
         setCustomWidth(current.width);
         setCustomHeight(current.height);
-        setScalePercent(100); // Reset scale since we're capturing the final scaled size
+        setScalePercent(100);
         setSizeMode('custom');
     };
 
@@ -339,7 +328,6 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
         const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
         const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
 
-        // Check if clicking inside existing crop area
         const insideCrop = x >= cropSettings.x && x <= cropSettings.x + cropSettings.width &&
             y >= cropSettings.y && y <= cropSettings.y + cropSettings.height;
 
@@ -366,7 +354,6 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
         setActiveHandle(handle);
         setIsDragging(true);
 
-        // Store initial mouse position and crop settings
         const rect = e.currentTarget.closest('[data-crop-image]')?.getBoundingClientRect();
         if (rect) {
             const mouseX = ((e.clientX - rect.left) / rect.width) * 100;
@@ -418,8 +405,6 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
 
         const { x, y, width, height } = cropSettings;
         const minSize = 10;
-
-        // Calculate the opposite corner/edge coordinates
         const right = x + width;
         const bottom = y + height;
 
@@ -429,50 +414,49 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
         let newHeight = height;
 
         switch (activeHandle) {
-            case 'nw': // Top-left corner - resize from top-left, bottom-right stays fixed
+            case 'nw':
                 newX = Math.max(0, Math.min(right - minSize, currentX));
                 newY = Math.max(0, Math.min(bottom - minSize, currentY));
                 newWidth = right - newX;
                 newHeight = bottom - newY;
                 break;
 
-            case 'ne': // Top-right corner - resize from top-right, bottom-left stays fixed
+            case 'ne':
                 newY = Math.max(0, Math.min(bottom - minSize, currentY));
                 newWidth = Math.max(minSize, Math.min(100 - x, currentX - x));
                 newHeight = bottom - newY;
                 break;
 
-            case 'sw': // Bottom-left corner - resize from bottom-left, top-right stays fixed
+            case 'sw':
                 newX = Math.max(0, Math.min(right - minSize, currentX));
                 newWidth = right - newX;
                 newHeight = Math.max(minSize, Math.min(100 - y, currentY - y));
                 break;
 
-            case 'se': // Bottom-right corner - resize from bottom-right, top-left stays fixed
+            case 'se':
                 newWidth = Math.max(minSize, Math.min(100 - x, currentX - x));
                 newHeight = Math.max(minSize, Math.min(100 - y, currentY - y));
                 break;
 
-            case 'n': // Top edge - resize from top, bottom stays fixed
+            case 'n':
                 newY = Math.max(0, Math.min(bottom - minSize, currentY));
                 newHeight = bottom - newY;
                 break;
 
-            case 's': // Bottom edge - resize from bottom, top stays fixed
+            case 's':
                 newHeight = Math.max(minSize, Math.min(100 - y, currentY - y));
                 break;
 
-            case 'w': // Left edge - resize from left, right stays fixed
+            case 'w':
                 newX = Math.max(0, Math.min(right - minSize, currentX));
                 newWidth = right - newX;
                 break;
 
-            case 'e': // Right edge - resize from right, left stays fixed
+            case 'e':
                 newWidth = Math.max(minSize, Math.min(100 - x, currentX - x));
                 break;
         }
 
-        // Apply the new settings
         setCropSettings({
             x: newX,
             y: newY,
@@ -494,7 +478,6 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
         setActiveHandle(null);
     };
 
-    // Add global mouse events for better drag experience
     useEffect(() => {
         if (!isDragging) return;
 
@@ -570,12 +553,57 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
             <style>{sliderStyles}</style>
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" onClick={onClose}>
                 <div
-                    className="relative w-[95vw] h-[95vh] max-w-7xl bg-white dark:bg-gray-900 rounded-lg shadow-xl overflow-hidden flex flex-col"
+                    className="relative w-[98vw] h-[98vh] sm:w-[95vw] sm:h-[95vh] md:w-[90vw] md:h-[90vh] max-w-7xl bg-white dark:bg-gray-900 rounded-none sm:rounded-lg shadow-xl overflow-hidden flex flex-col modal-content"
                     onClick={(e) => e.stopPropagation()}
                 >
+                    {/* Mobile Warning Banner */}
+                    {isMobile && (
+                        <div className="block sm:hidden bg-amber-100 border-l-4 border-amber-500 text-amber-800 p-2 mb-2 rounded text-xs flex items-center gap-2">
+                            <svg className="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            Cropping and resizing work best on desktop. For optimal experience, use a larger screen.
+                        </div>
+                    )}
+
+                    {/* Mobile Warning Banner */}
+                    {showMobileWarning && isMobile && (
+                        <div className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 p-3 flex items-start gap-3">
+                            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">
+                                    Better Experience on Desktop
+                                </p>
+                                <p className="text-xs text-amber-700 dark:text-amber-300 mb-2">
+                                    Image editing works best on desktop. For optimal cropping and resizing, please use a larger screen.
+                                </p>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setShowMobileWarning(false);
+                                            localStorage.setItem('hideMobileImageModalWarning', 'true');
+                                        }}
+                                        className="text-xs bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 rounded transition-colors"
+                                    >
+                                        Continue Anyway
+                                    </button>
+                                    <button
+                                        onClick={onClose}
+                                        className="text-xs border border-amber-600 text-amber-600 hover:bg-amber-600 hover:text-white px-2 py-1 rounded transition-colors"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowMobileWarning(false)}
+                                className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 p-1"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    )}
                     {/* Header */}
-                    <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center justify-between p-2 sm:p-4 border-b border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center gap-1 sm:gap-3 flex-wrap text-xs sm:text-sm">
                             <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 rounded capitalize">
                                 {image.provider}
                             </span>
@@ -616,14 +644,14 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                     </div>
 
                     {/* Size Controls */}
-                    <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-y-auto max-h-[35vh]">
-                        {/* Compact Controls Grid */}
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 mb-3">
+                    <div className="p-2 sm:p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-y-auto max-h-[30vh] sm:max-h-[35vh]">
+                        {/* Mobile-First Controls Grid */}
+                        <div className="grid grid-cols-1 gap-2 sm:gap-3 mb-2 sm:mb-3">
                             {/* Size Controls */}
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300 w-12">Size:</span>
-                                    <div className="flex gap-1">
+                            <div className="space-y-1 sm:space-y-2">
+                                <div className="flex items-center gap-1 sm:gap-2">
+                                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300 w-8 sm:w-12">Size:</span>
+                                    <div className="flex gap-0.5 sm:gap-1 flex-wrap">
                                         {(['small', 'medium', 'large', 'original'] as const).map((size) => (
                                             <button
                                                 key={size}
@@ -634,7 +662,7 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                                                     }
                                                     setSizeMode(size);
                                                 }}
-                                                className={`px-2 py-1 text-xs rounded transition-colors capitalize ${sizeMode === size
+                                                className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs rounded transition-colors capitalize ${sizeMode === size
                                                     ? 'bg-blue-600 text-white'
                                                     : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                                                     }`}
@@ -646,8 +674,8 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                                 </div>
 
                                 {/* Custom Size Inputs */}
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-600 dark:text-gray-400 w-12">Custom:</span>
+                                <div className="flex items-center gap-1 sm:gap-2">
+                                    <span className="text-xs text-gray-600 dark:text-gray-400 w-8 sm:w-12">Custom:</span>
                                     <input
                                         type="number"
                                         value={customWidth}
@@ -656,7 +684,7 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                                             setCustomWidth(newWidth);
                                             setSizeMode('custom');
                                         }}
-                                        className="w-16 px-1 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                        className="w-12 sm:w-16 px-1 py-0.5 sm:py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                         min="100"
                                         max="2000"
                                     />
@@ -669,13 +697,13 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                                             setCustomHeight(newHeight);
                                             setSizeMode('custom');
                                         }}
-                                        className="w-16 px-1 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                        className="w-12 sm:w-16 px-1 py-0.5 sm:py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                         min="100"
                                         max="2000"
                                     />
                                     <button
                                         onClick={maintainAspectRatio}
-                                        className="px-1 py-1 text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded transition-colors"
+                                        className="px-1 py-0.5 sm:py-1 text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded transition-colors"
                                         title="Maintain aspect ratio"
                                     >
                                         📐
@@ -684,7 +712,7 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex items-center gap-1 justify-end">
+                            <div className="flex items-center gap-0.5 sm:gap-1 justify-end flex-wrap">
                                 <button
                                     onClick={updateCustomFromCurrent}
                                     className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
@@ -701,8 +729,8 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                         </div>
 
                         {/* Scale Slider */}
-                        <div className="flex items-center gap-2 mb-3">
-                            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 w-12">Scale:</span>
+                        <div className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3">
+                            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 w-8 sm:w-12">Scale:</span>
                             <span className="text-xs text-gray-600 dark:text-gray-400">25%</span>
                             <input
                                 type="range"
@@ -738,8 +766,8 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                         </div>
 
                         {/* Crop Controls */}
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
+                        <div className="space-y-2 sm:space-y-3">
+                            <div className="flex items-center justify-between flex-wrap gap-1">
                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Crop:</span>
                                 <button
                                     onClick={() => {
@@ -785,8 +813,8 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                                         💡 Drag on image or use sliders for precision
                                     </div>
 
-                                    {/* Compact 4-column grid for all crop controls */}
-                                    <div className="grid grid-cols-4 gap-2">
+                                    {/* Mobile-First 2x2 grid for crop controls */}
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-2">
                                         <div>
                                             <label className="text-xs text-gray-600 dark:text-gray-400">X: {Math.round(cropSettings.x)}%</label>
                                             <input
@@ -838,7 +866,7 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                     </div>
 
                     {/* Image */}
-                    <div className="relative flex-1 bg-gray-100 dark:bg-gray-800 overflow-auto p-4 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-200 dark:scrollbar-track-gray-800">
+                    <div className="relative flex-1 bg-gray-100 dark:bg-gray-800 overflow-auto p-2 sm:p-4 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-200 dark:scrollbar-track-gray-800">
                         {loading && (
                             <div className="flex items-center justify-center h-64 w-full">
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
@@ -862,10 +890,7 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                                             className={`border border-gray-300 dark:border-gray-600 shadow-lg transition-all duration-200 ease-in-out ${showCropOverlay ? 'cursor-crosshair' : ''
                                                 }`}
                                             onLoad={() => setLoading(false)}
-                                            onError={() => {
-                                                console.error('Image failed to load:', image.url);
-                                                setLoading(false);
-                                            }}
+                                            onError={() => setLoading(false)}
                                             draggable={false}
                                         />
 
@@ -1016,10 +1041,10 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-                        <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 sm:p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 gap-2 sm:gap-0">
+                        <div className="flex-1 min-w-0">
                             {image.alt && (
-                                <p className="text-sm text-gray-600 dark:text-gray-400 truncate mb-1">
+                                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate mb-1">
                                     {image.alt}
                                 </p>
                             )}
@@ -1043,7 +1068,7 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                             )}
                         </div>
 
-                        <div className="flex items-center gap-2 ml-4">
+                        <div className="flex items-center gap-1 sm:gap-2 sm:ml-4 flex-wrap">
                             {/* Favorite Button */}
                             {showFavoriteButton && (
                                 <button
@@ -1055,7 +1080,7 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                                         }
                                     }}
                                     disabled={isLoading}
-                                    className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${isLoading
+                                    className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-md transition-colors ${isLoading
                                         ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-50'
                                         : 'hover:bg-gray-100 dark:hover:bg-gray-800'
                                         }`}
@@ -1072,7 +1097,7 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21.752 6.584a5.754 5.754 0 00-9.07-2.157l-.682.68-.682-.68A5.754 5.754 0 002.248 6.584a5.753 5.753 0 00.824 7.815l8.116 7.407a.75.75 0 001.024 0l8.116-7.407a5.753 5.753 0 00.824-7.815z" />
                                         </svg>
                                     )}
-                                    <span className="text-sm">
+                                    <span className="text-xs sm:text-sm">
                                         {isLoading ? "Removing..." : isFavorited ? "Remove" : "Favorite"}
                                     </span>
                                 </button>
@@ -1082,7 +1107,7 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                             <button
                                 onClick={() => void handleDownload()}
                                 disabled={isDownloading}
-                                className={`flex items-center gap-2 px-3 py-2 text-white rounded-md transition-colors ${isDownloading
+                                className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 text-white rounded-md transition-colors ${isDownloading
                                     ? 'bg-blue-400 cursor-not-allowed'
                                     : 'bg-blue-600 hover:bg-blue-700'
                                     }`}
@@ -1094,7 +1119,7 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
                                 )}
-                                <span className="text-sm">{isDownloading ? "Downloading..." : "Download"}</span>
+                                <span className="text-xs sm:text-sm">{isDownloading ? "Downloading..." : "Download"}</span>
                             </button>
 
                             {/* View Original Button */}
@@ -1102,12 +1127,12 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                                 href={image.link}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors"
+                                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
-                                <span className="text-sm">View Original</span>
+                                <span className="text-xs sm:text-sm">View Original</span>
                             </a>
                         </div>
                     </div>

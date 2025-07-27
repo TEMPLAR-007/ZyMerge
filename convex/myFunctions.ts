@@ -2,19 +2,6 @@ import { v } from "convex/values";
 import { query, mutation, action } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
-// Debug function to check authentication
-export const debugAuth = query({
-  args: {},
-  returns: v.union(v.object({
-    tokenIdentifier: v.string(),
-    subject: v.string(),
-  }), v.null()),
-  handler: async (ctx) => {
-    console.log("server identity", await ctx.auth.getUserIdentity());
-    return await ctx.auth.getUserIdentity();
-  },
-});
-
 export const searchImages = action({
   args: {
     query: v.string(),
@@ -28,7 +15,6 @@ export const searchImages = action({
     const perProvider = args.perProvider ?? 20;
     const page = args.page ?? 1;
 
-    // Read API keys from environment variables
     const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
     const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
     const PIXABAY_API_KEY = process.env.PIXABAY_API_KEY;
@@ -37,9 +23,7 @@ export const searchImages = action({
       throw new Error("Missing one or more image API keys in environment variables.");
     }
 
-    // Helper to fetch total pages for each provider
     async function getTotalPages() {
-      // Fetch first page with per_page=1 to get total counts
       const [unsplash, pexels, pixabay] = await Promise.all([
         fetch(`https://api.unsplash.com/search/photos?query=${query}&per_page=1&page=1`, {
           headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` },
@@ -63,12 +47,9 @@ export const searchImages = action({
       lastPages = await getTotalPages();
     }
 
-    // Ensure page numbers are numbers for comparison
     const unsplashPage = typeof lastPages.unsplash === 'number' ? lastPages.unsplash : 1;
     const pexelsPage = typeof lastPages.pexels === 'number' ? lastPages.pexels : 1;
     const pixabayPage = typeof lastPages.pixabay === 'number' ? lastPages.pixabay : 1;
-
-    // Fetch from Unsplash
     const unsplashPromise = fetch(
       `https://api.unsplash.com/search/photos?query=${query}&per_page=${perProvider}&page=${unsplashPage}`,
       {
@@ -101,7 +82,6 @@ export const searchImages = action({
         totalPages: 0
       }));
 
-    // Fetch from Pexels
     const pexelsPromise = fetch(
       `https://api.pexels.com/v1/search?query=${query}&per_page=${perProvider}&page=${pexelsPage}`,
       {
@@ -134,7 +114,6 @@ export const searchImages = action({
         totalPages: 0
       }));
 
-    // Fetch from Pixabay
     const pixabayPromise = fetch(
       `https://pixabay.com/api/?key=${PIXABAY_API_KEY}&q=${query}&per_page=${perProvider}&page=${pixabayPage}`
     )
@@ -164,19 +143,16 @@ export const searchImages = action({
         totalPages: 0
       }));
 
-    // Wait for all
     const [unsplash, pexels, pixabay] = await Promise.all([
       unsplashPromise,
       pexelsPromise,
       pixabayPromise,
     ]);
 
-    // Combine images and calculate totals
     const allImages = [...unsplash.images, ...pexels.images, ...pixabay.images];
     const totalImages = unsplash.total + pexels.total + pixabay.total;
     const maxTotalPages = Math.max(unsplash.totalPages, pexels.totalPages, pixabay.totalPages);
 
-    // If we fetched 'last', set currentPage to max of lastPages
     const currentPage = page === 'last' ? maxTotalPages : (typeof page === 'number' ? page : 1);
 
     return {
@@ -206,7 +182,7 @@ export const addFavorite = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
-    // Prevent duplicate
+    
     const existing = await ctx.db
       .query("favorites")
       .withIndex("by_user_image", (q) =>

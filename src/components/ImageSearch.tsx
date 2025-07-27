@@ -44,14 +44,11 @@ export function ImageSearch() {
   const addFavorite = useMutation(api.myFunctions.addFavorite);
   const removeFavorite = useMutation(api.myFunctions.removeFavorite);
 
-  // Listen for authentication changes and resume pending actions
   useEffect(() => {
     if (isAuthenticated && pendingAction) {
-      // User just signed in, resume the pending action
       void confirmToggleFavorite(pendingAction.image, pendingAction.action).then(() => {
-        // Show success message
         setShowSuccessMessage(true);
-        setTimeout(() => setShowSuccessMessage(false), 3000); // Hide after 3 seconds
+        setTimeout(() => setShowSuccessMessage(false), 3000);
       });
       setPendingAction(null);
       setSignInModal(false);
@@ -74,8 +71,8 @@ export function ImageSearch() {
 
       setImages(results.images);
       setPagination(results.pagination);
-    } catch (err: any) {
-      setError(err.message || "Error searching images");
+    } catch {
+      // Error handling - could be enhanced with user notifications
     }
     setLoading(false);
   };
@@ -95,9 +92,7 @@ export function ImageSearch() {
   };
 
   const handleToggleFavorite = (img: any) => {
-    // Check if user is authenticated
     if (!isAuthenticated) {
-      // Store the pending action and show sign in modal
       setPendingAction({ image: img, action: 'add' });
       setSignInModal(true);
       return;
@@ -109,10 +104,8 @@ export function ImageSearch() {
     );
 
     if (isFavorited) {
-      // Show confirmation for removing favorites
       setConfirmationModal({ isOpen: true, image: img, action: 'remove' });
     } else {
-      // Add to favorites directly (no confirmation needed)
       void confirmToggleFavorite(img, 'add');
     }
   };
@@ -138,8 +131,8 @@ export function ImageSearch() {
           creditUrl: img.creditUrl,
         });
       }
-    } catch (err: any) {
-      console.error('Error toggling favorite:', err);
+    } catch {
+      // Error handling - could be enhanced with user notifications
     } finally {
       setIsTogglingFavorite(false);
       setTogglingImageId(null);
@@ -164,7 +157,7 @@ export function ImageSearch() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-6xl">
       {/* Success Message */}
       {showSuccessMessage && (
         <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg animate-fade-in-up">
@@ -177,11 +170,11 @@ export function ImageSearch() {
         </div>
       )}
 
-      <Card className="mb-8 animate-fade-in-up">
-        <CardHeader className="text-center">
+      <Card className="mb-4 sm:mb-8 animate-fade-in-up">
+        <CardHeader className="text-center px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex items-center justify-center space-x-2 mb-2">
             <svg
-              className="h-8 w-8 text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]"
+              className="h-6 w-6 sm:h-8 sm:w-8 text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -216,38 +209,38 @@ export function ImageSearch() {
                 style={{ animationDelay: '0.2s' }}
               />
             </svg>
-            <CardTitle className="text-3xl text-blue-400">Discover Images</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl md:text-3xl text-blue-400">Discover Images</CardTitle>
           </div>
-          <CardDescription className="text-lg">
+          <CardDescription className="text-sm sm:text-base md:text-lg">
             Find the perfect image from multiple sources
           </CardDescription>
 
           {/* Dynamic Image Sources Section */}
-          <div className="mt-6">
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <div className="flex items-center space-x-2">
-                <Badge variant="secondary" className="px-3 py-1 hover:scale-105 transition-transform duration-200">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+          <div className="mt-4 sm:mt-6">
+            <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2">
+              <div className="flex items-center space-x-1 sm:space-x-2">
+                <Badge variant="secondary" className="px-2 sm:px-3 py-1 hover:scale-105 transition-transform duration-200 text-xs">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-1 sm:mr-2"></div>
                   Unsplash
                 </Badge>
-                <Badge variant="secondary" className="px-3 py-1 hover:scale-105 transition-transform duration-200">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                <Badge variant="secondary" className="px-2 sm:px-3 py-1 hover:scale-105 transition-transform duration-200 text-xs">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-1 sm:mr-2"></div>
                   Pexels
                 </Badge>
-                <Badge variant="secondary" className="px-3 py-1 hover:scale-105 transition-transform duration-200">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                <Badge variant="secondary" className="px-2 sm:px-3 py-1 hover:scale-105 transition-transform duration-200 text-xs">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full mr-1 sm:mr-2"></div>
                   Pixabay
                 </Badge>
               </div>
-              <div className="flex items-center text-xs text-muted-foreground">
+              <div className="hidden sm:flex items-center text-xs text-muted-foreground">
                 <span className="mr-1">•</span>
                 <span>More sources coming soon</span>
               </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleNewSearch} className="flex gap-3 max-w-2xl mx-auto">
+        <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+          <form onSubmit={handleNewSearch} className="flex flex-col sm:flex-row gap-2 sm:gap-3 max-w-2xl mx-auto">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -255,19 +248,20 @@ export function ImageSearch() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="What are you looking for?"
-                className="pl-10 hover:shadow-md transition-shadow duration-200"
+                className="pl-10 hover:shadow-md transition-shadow duration-200 h-10 sm:h-auto"
                 disabled={loading}
               />
             </div>
             <Button
               type="submit"
               disabled={loading || !query.trim()}
-              className="hover:scale-105 transition-transform duration-200 hover:shadow-lg"
+              className="hover:scale-105 transition-transform duration-200 hover:shadow-lg h-10 sm:h-auto px-4 sm:px-6"
             >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Searching...
+                  <span className="hidden sm:inline">Searching...</span>
+                  <span className="sm:hidden">Search</span>
                 </>
               ) : (
                 <>
@@ -281,34 +275,39 @@ export function ImageSearch() {
       </Card>
 
       {error && (
-        <Card className="mb-6 border-destructive animate-fade-in-up">
-          <CardContent className="pt-6">
+        <Card className="mb-4 sm:mb-6 border-destructive animate-fade-in-up">
+          <CardContent className="pt-4 sm:pt-6 px-4 sm:px-6">
             <div className="flex items-center space-x-2 text-destructive">
-              <AlertCircle className="h-4 w-4" />
-              <span>{error}</span>
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <span className="text-sm sm:text-base break-words">{error}</span>
             </div>
           </CardContent>
         </Card>
       )}
 
       {pagination && (
-        <div className="mb-6 text-center animate-fade-in-up">
-          <p className="text-sm text-muted-foreground">
+        <div className="mb-4 sm:mb-6 text-center animate-fade-in-up">
+          <p className="text-xs sm:text-sm text-muted-foreground px-2">
             Found {pagination.totalImages.toLocaleString()} images
             {pagination.totalPages > 1 && (
-              <span> • Page {pagination.currentPage} of {pagination.totalPages}</span>
+              <span className="hidden sm:inline"> • Page {pagination.currentPage} of {pagination.totalPages}</span>
             )}
           </p>
+          {pagination.totalPages > 1 && (
+            <p className="text-xs text-muted-foreground mt-1 sm:hidden">
+              Page {pagination.currentPage} of {pagination.totalPages}
+            </p>
+          )}
         </div>
       )}
 
       {loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="animate-fade-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-8">
+          {[...Array(12)].map((_, i) => (
+            <div key={i} className="animate-fade-in-up" style={{ animationDelay: `${i * 0.05}s` }}>
               <div className="aspect-square bg-gray-800 rounded-lg loading-skeleton"></div>
-              <div className="mt-2 h-4 bg-gray-800 rounded loading-skeleton"></div>
-              <div className="mt-1 h-3 bg-gray-800 rounded w-2/3 loading-skeleton"></div>
+              <div className="mt-1 sm:mt-2 h-3 sm:h-4 bg-gray-800 rounded loading-skeleton"></div>
+              <div className="mt-1 h-2 sm:h-3 bg-gray-800 rounded w-2/3 loading-skeleton"></div>
             </div>
           ))}
         </div>
@@ -338,10 +337,10 @@ export function ImageSearch() {
       )}
 
       {images.length === 0 && !loading && query && hasSearched && (
-        <Card className="mt-8 animate-fade-in-up">
-          <CardContent className="pt-6 text-center">
-            <ImageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">
+        <Card className="mt-4 sm:mt-8 animate-fade-in-up">
+          <CardContent className="pt-4 sm:pt-6 text-center px-4 sm:px-6">
+            <ImageIcon className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-sm sm:text-base text-muted-foreground break-words">
               No images found for "{query}"
             </p>
           </CardContent>

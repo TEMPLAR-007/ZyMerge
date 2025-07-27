@@ -23,21 +23,16 @@ export function Pagination({ pagination, loading, onPageChange }: PaginationProp
     // Always show first page
     pages.push(1);
 
-    // Calculate range of pages to show
     let startPage = Math.max(2, currentPage - 1);
     let endPage = Math.min(totalPages - 1, currentPage + 1);
 
-    // Adjust if we're near the beginning
     if (currentPage <= 3) {
       endPage = Math.min(totalPages - 1, 4);
     }
 
-    // Adjust if we're near the end
     if (currentPage >= totalPages - 2) {
       startPage = Math.max(2, totalPages - 3);
     }
-
-    // Add ellipsis and middle pages
     if (startPage > 2) {
       pages.push('...');
     }
@@ -65,19 +60,20 @@ export function Pagination({ pagination, loading, onPageChange }: PaginationProp
   };
 
   return (
-    <div className="flex justify-center items-center gap-2 mt-8">
+    <div className="flex justify-center items-center gap-1 sm:gap-2 mt-4 sm:mt-8 px-2">
       <Button
         variant="outline"
         size="sm"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={!hasPrevPage || loading}
-        className="flex items-center gap-2"
+        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3"
       >
         <ChevronLeft className="h-4 w-4" />
-        Previous
+        <span className="hidden sm:inline">Previous</span>
+        <span className="sm:hidden">Prev</span>
       </Button>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 overflow-x-auto max-w-[60vw] sm:max-w-none">
         {renderPageNumbers()}
       </div>
 
@@ -86,9 +82,10 @@ export function Pagination({ pagination, loading, onPageChange }: PaginationProp
         size="sm"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={!hasNextPage || loading}
-        className="flex items-center gap-2"
+        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3"
       >
-        Next
+        <span className="hidden sm:inline">Next</span>
+        <span className="sm:hidden">Next</span>
         <ChevronRight className="h-4 w-4" />
       </Button>
 
@@ -98,6 +95,7 @@ export function Pagination({ pagination, loading, onPageChange }: PaginationProp
           size="sm"
           onClick={() => onPageChange('last')}
           disabled={currentPage === totalPages || loading}
+          className="hidden sm:flex px-2 sm:px-3"
         >
           Last
         </Button>

@@ -7,7 +7,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogOverlay,
+  DialogPortal,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 interface SignInModalProps {
   isOpen: boolean;
@@ -23,13 +26,12 @@ interface SignInModalProps {
 export function SignInModal({
   isOpen,
   onClose,
-  title = "Sign in",
+  title = "Sign in to ZyMrge",
   message = "",
   pendingAction = null
 }: SignInModalProps) {
   const { isAuthenticated } = useConvexAuth();
 
-  // Auto-close modal when user successfully signs in
   useEffect(() => {
     if (isAuthenticated && isOpen) {
       onClose();
@@ -37,7 +39,7 @@ export function SignInModal({
   }, [isAuthenticated, isOpen, onClose]);
 
   const getActionMessage = () => {
-    if (!pendingAction) return message;
+    if (!pendingAction) return message || "Where creators connect and content flows.";
 
     const actionText = pendingAction.action === 'add' ? 'add to favorites' : 'remove from favorites';
     return `Sign in to ${actionText} and access your saved images.`;
@@ -45,15 +47,37 @@ export function SignInModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
-            {getActionMessage()}
-          </DialogDescription>
-        </DialogHeader>
-        <SignInForm />
-      </DialogContent>
+      <DialogPortal>
+        <DialogOverlay
+          className="fixed inset-0 z-50"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'none'
+          }}
+        />
+        <DialogContent
+          className="sm:max-w-md border border-gray-700 shadow-lg"
+          style={{
+            backgroundColor: '#1f1f1f',
+            color: '#ffffff',
+            backgroundImage: 'none',
+            backdropFilter: 'none'
+          }}
+        >
+          <DialogHeader className="text-center">
+            <div className="flex items-center justify-center space-x-2 mb-2">
+              <DialogTitle className="text-xl">{title}</DialogTitle>
+              <Badge variant="secondary" className="text-xs">Beta</Badge>
+            </div>
+            <DialogDescription className="text-center">
+              {getActionMessage()}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            <SignInForm showHeader={false} showCard={false} />
+          </div>
+        </DialogContent>
+      </DialogPortal>
     </Dialog>
   );
 }

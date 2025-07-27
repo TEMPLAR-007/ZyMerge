@@ -1,45 +1,48 @@
-# Welcome to your Convex + React (Vite) + Convex Auth app
+# ZyMrge
 
-This is a [Convex](https://convex.dev/) project created with [`npm create convex`](https://www.npmjs.com/package/create-convex).
+Where creators connect and content flows. Your ultimate destination for discovering and collecting stunning images from the web's best sources.
 
-After the initial setup (<2 minutes) you'll have a working full-stack app using:
+## Features
 
-- Convex as your backend (database, server logic)
-- [React](https://react.dev/) as your frontend (web page interactivity)
-- [Vite](https://vitest.dev/) for optimized web hosting
-- [Tailwind](https://tailwindcss.com/) for building great looking UI
-- [Convex Auth](https://labs.convex.dev/auth) for authentication
+- **Multi-Source Search**: Search across Unsplash, Pexels, and Pixabay simultaneously
+- **Smart Favorites**: Save and organize your favorite images with secure cloud storage
+- **Image Editing**: Crop, resize, and download images in various formats
+- **Responsive Design**: Optimized for both desktop and mobile devices
+- **Authentication**: Secure user accounts with favorites sync
 
-## Get started
+## Tech Stack
 
-If you just cloned this codebase and didn't use `npm create convex`, run:
+- **Frontend**: React 19, TypeScript, Tailwind CSS
+- **Backend**: Convex (real-time database and serverless functions)
+- **Authentication**: Convex Auth
+- **UI Components**: Shadcn/ui
+- **Build Tool**: Vite
 
-```
-npm install
-npm run dev
-```
+## Getting Started
 
-If you're reading this README on GitHub and want to use this template, run:
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables (see `.env.example`)
+4. Start development server: `npm run dev`
 
-```
-npm create convex@latest -- -t react-vite-convexauth
-```
+## Custom Logo Setup
 
-For more information on how to configure Convex Auth, check out the [Convex Auth docs](https://labs.convex.dev/auth/).
+To add your custom logo and favicon:
 
-For more examples of different Convex Auth flows, check out this [example repo](https://www.convex.dev/templates/convex-auth).
+1. Add your logo files to `src/assets/logo/`:
+   - `logo.svg` - Main logo
+   - `favicon.ico` - Browser favicon
+   - `favicon-16x16.png` - 16x16 favicon
+   - `favicon-32x32.png` - 32x32 favicon
+   - `apple-touch-icon.png` - Apple touch icon
 
-## Learn more
+2. Update the `CustomLogo` component in `src/components/Logo.tsx`
+3. Replace the placeholder SVG with your custom logo
 
-To learn more about developing your project with Convex, check out:
+## Deployment
 
-- The [Tour of Convex](https://docs.convex.dev/get-started) for a thorough introduction to Convex principles.
-- The rest of [Convex docs](https://docs.convex.dev/) to learn about all Convex features.
-- [Stack](https://stack.convex.dev/) for in-depth articles on advanced topics.
+The app is configured for deployment on Vercel with Convex backend.
 
-## Join the community
+## License
 
-Join thousands of developers building full-stack apps with Convex:
-
-- Join the [Convex Discord community](https://convex.dev/community) to get help in real-time.
-- Follow [Convex on GitHub](https://github.com/get-convex/), star and contribute to the open-source implementation of Convex.
+All rights reserved © 2025 ZyMrge

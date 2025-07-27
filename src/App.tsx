@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Authenticated, Unauthenticated } from "convex/react";
+import { useState, useEffect } from "react";
+import { Authenticated, Unauthenticated, useConvexAuth } from "convex/react";
 import { Header } from "./components/Header";
 import { SignInForm } from "./components/SignInForm";
+import { SignInModal } from "./components/SignInModal";
 import { ImageSearch } from "./components/ImageSearch";
 import { FavoritesView } from "./components/FavoritesView";
 import { LandingPage } from "./components/LandingPage";
@@ -11,6 +12,14 @@ export default function App() {
   const [currentView, setCurrentView] = useState<"home" | "search" | "favorites">("home");
   const [isRouteLoading, setIsRouteLoading] = useState(false);
   const [targetView, setTargetView] = useState<"home" | "search" | "favorites" | undefined>();
+  const [signInModal, setSignInModal] = useState(false);
+  const { isAuthenticated } = useConvexAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated && currentView === "favorites") {
+      handleViewChange("home");
+    }
+  }, [isAuthenticated, currentView]);
 
   const handleViewChange = (newView: "home" | "search" | "favorites") => {
     if (newView === currentView) return;
@@ -28,7 +37,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header currentView={currentView} setCurrentView={handleViewChange} />
+      <Header 
+        currentView={currentView} 
+        setCurrentView={handleViewChange}
+        onSignInClick={() => setSignInModal(true)}
+      />
 
       <RouteLoading isLoading={isRouteLoading} targetView={targetView} />
 
@@ -37,6 +50,7 @@ export default function App() {
           <LandingPage
             onNavigateToSearch={() => handleViewChange("search")}
             onNavigateToFavorites={() => handleViewChange("favorites")}
+            onSignInRequired={() => setSignInModal(true)}
           />
         )}
 
@@ -51,11 +65,21 @@ export default function App() {
         {currentView === "favorites" && (
           <Unauthenticated>
             <div className="container mx-auto px-4 py-8">
-              <SignInForm />
+              <SignInForm 
+                title="Access Your Favorites"
+                description="Sign in to view and manage your saved images"
+              />
             </div>
           </Unauthenticated>
         )}
       </main>
+
+      <SignInModal
+        isOpen={signInModal}
+        onClose={() => setSignInModal(false)}
+        title="Sign in to ZyMrge"
+        message="Where creators connect and content flows. Sign in to save your favorite images and access them across all your devices."
+      />
     </div>
   );
 }

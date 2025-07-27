@@ -5,6 +5,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogOverlay,
+  DialogPortal,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Info } from "lucide-react";
@@ -38,17 +40,17 @@ export function ConfirmationModal({
     switch (type) {
       case 'danger':
         return {
-          icon: <AlertTriangle className="h-6 w-6 text-destructive" />,
+          icon: <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-destructive flex-shrink-0" />,
           confirmVariant: "destructive" as const
         };
       case 'warning':
         return {
-          icon: <AlertTriangle className="h-6 w-6 text-yellow-600" />,
+          icon: <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600 flex-shrink-0" />,
           confirmVariant: "default" as const
         };
       case 'info':
         return {
-          icon: <Info className="h-6 w-6 text-blue-600" />,
+          icon: <Info className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 flex-shrink-0" />,
           confirmVariant: "default" as const
         };
     }
@@ -63,36 +65,61 @@ export function ConfirmationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg">
-        <DialogHeader>
-          <div className="flex items-center space-x-2">
+      <DialogPortal>
+        <DialogOverlay 
+          className="fixed inset-0 z-50" 
+          style={{ 
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'none'
+          }} 
+        />
+        <DialogContent 
+          className="w-[95vw] max-w-md mx-auto border border-gray-700 shadow-lg" 
+          style={{ 
+            backgroundColor: '#1f1f1f',
+            color: '#ffffff',
+            backgroundImage: 'none',
+            backdropFilter: 'none'
+          }}
+        >
+        <DialogHeader className="text-center sm:text-left">
+          <div className="flex items-center justify-center sm:justify-start space-x-2 mb-2">
             {typeStyles.icon}
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">{title}</DialogTitle>
           </div>
-          <DialogDescription>
+          <DialogDescription className="text-sm sm:text-base text-center sm:text-left">
             {message}
           </DialogDescription>
         </DialogHeader>
 
         {imageUrl && (
-          <div className="flex justify-center">
+          <div className="flex justify-center py-2">
             <img
               src={imageUrl}
               alt={imageAlt || "Preview"}
-              className="w-20 h-20 object-cover rounded-lg border"
+              className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg border border-border"
             />
           </div>
         )}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            className="w-full sm:w-auto order-2 sm:order-1"
+          >
             {cancelText}
           </Button>
-          <Button variant={typeStyles.confirmVariant} onClick={handleConfirm}>
+          <Button 
+            variant={typeStyles.confirmVariant} 
+            onClick={handleConfirm}
+            className="w-full sm:w-auto order-1 sm:order-2"
+          >
             {confirmText}
           </Button>
         </DialogFooter>
-      </DialogContent>
+        </DialogContent>
+      </DialogPortal>
     </Dialog>
   );
 }

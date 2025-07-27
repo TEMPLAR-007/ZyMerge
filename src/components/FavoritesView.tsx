@@ -35,12 +35,9 @@ export function FavoritesView() {
     try {
       setIsRemoving(true);
       setRemovingImageId(imageId);
-      console.log('Removing favorite:', { provider: img.provider, imageId });
       await removeFavorite({ provider: img.provider, imageId });
-      console.log('Successfully removed favorite');
-    } catch (error) {
-      console.error('Error removing favorite:', error);
-      alert('Failed to remove favorite. Please try again.');
+    } catch {
+      // Silent error handling - could be enhanced with user notifications
     } finally {
       setIsRemoving(false);
       setRemovingImageId(null);
@@ -70,23 +67,22 @@ export function FavoritesView() {
     creditUrl: fav.creditUrl
   }));
 
-  // Show loading state while favorites are being fetched
   if (favorites === undefined) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <Card className="mb-8">
-          <CardHeader className="text-center">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-6xl">
+        <Card className="mb-4 sm:mb-8">
+          <CardHeader className="text-center px-4 sm:px-6 py-4 sm:py-6">
             <div className="flex items-center justify-center space-x-2 mb-2">
-              <Heart className="h-8 w-8 text-primary" />
-              <CardTitle className="text-3xl">My Favorites</CardTitle>
+              <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              <CardTitle className="text-xl sm:text-2xl md:text-3xl">My Favorites</CardTitle>
             </div>
-            <CardDescription className="text-lg">
+            <CardDescription className="text-sm sm:text-base md:text-lg">
               Your saved images from Unsplash, Pexels, and Pixabay
             </CardDescription>
           </CardHeader>
         </Card>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="animate-fade-in-up" style={{ animationDelay: `${i * 0.03}s` }}>
               <div className="aspect-square bg-gray-800 rounded-lg loading-skeleton"></div>
@@ -100,18 +96,18 @@ export function FavoritesView() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <Card className="mb-8 animate-fade-in-up">
-        <CardHeader className="text-center">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-6xl">
+      <Card className="mb-4 sm:mb-8 animate-fade-in-up">
+        <CardHeader className="text-center px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex items-center justify-center space-x-2 mb-2">
-            <Heart className="h-8 w-8 text-primary" />
-            <CardTitle className="text-3xl">My Favorites</CardTitle>
+            <Heart className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+            <CardTitle className="text-xl sm:text-2xl md:text-3xl">My Favorites</CardTitle>
           </div>
-          <CardDescription className="text-lg">
+          <CardDescription className="text-sm sm:text-base md:text-lg">
             Your saved images from Unsplash, Pexels, and Pixabay
           </CardDescription>
           <div className="flex items-center justify-center space-x-2 mt-4">
-            <Badge variant="secondary" className="hover:scale-105 transition-transform duration-200">
+            <Badge variant="secondary" className="hover:scale-105 transition-transform duration-200 text-xs sm:text-sm">
               {favorites.length} images saved
             </Badge>
           </div>
@@ -119,13 +115,13 @@ export function FavoritesView() {
       </Card>
 
       {favorites.length === 0 ? (
-        <Card className="mt-8 animate-fade-in-up">
-          <CardContent className="pt-6 text-center">
-            <Heart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground mb-2">
+        <Card className="mt-4 sm:mt-8 animate-fade-in-up">
+          <CardContent className="pt-4 sm:pt-6 text-center px-4 sm:px-6">
+            <Heart className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-sm sm:text-base text-muted-foreground mb-2">
               You haven't saved any images yet.
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Start searching and adding favorites to see them here!
             </p>
           </CardContent>
@@ -167,8 +163,8 @@ export function FavoritesView() {
             if (selectedImage && confirmationModal.image === selectedImage) {
               handleCloseModal(); // Close image modal if removing the currently viewed image
             }
-          }).catch((error) => {
-            console.error('Error removing favorite:', error);
+          }).catch(() => {
+            // Error handling - could be enhanced with user notifications
           });
         }}
         title="Remove from Favorites"
