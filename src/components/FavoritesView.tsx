@@ -7,7 +7,7 @@ import { ImageModal } from "./ImageModal";
 import { ConfirmationModal } from "./ConfirmationModal";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart } from "lucide-react";
+import { Heart, Rocket, Search } from "lucide-react";
 
 export function FavoritesView() {
   const { isAuthenticated } = useConvexAuth();
@@ -54,8 +54,24 @@ export function FavoritesView() {
     setSelectedImage(null);
   };
 
+  // Separate favorites by provider type
+  const regularFavorites = favorites.filter(fav => fav.provider !== 'nasa');
+  const nasaFavorites = favorites.filter(fav => fav.provider === 'nasa');
+
   // Convert favorites to image format for ImageGrid
-  const favoriteImages = favorites.map(fav => ({
+  const regularFavoriteImages = regularFavorites.map(fav => ({
+    provider: fav.provider,
+    id: fav.imageId,
+    imageId: fav.imageId, // Keep both for compatibility
+    url: fav.url,
+    thumb: fav.thumb,
+    alt: fav.alt || "",
+    link: fav.link || "",
+    credit: fav.credit,
+    creditUrl: fav.creditUrl
+  }));
+
+  const nasaFavoriteImages = nasaFavorites.map(fav => ({
     provider: fav.provider,
     id: fav.imageId,
     imageId: fav.imageId, // Keep both for compatibility
@@ -77,7 +93,7 @@ export function FavoritesView() {
               <CardTitle className="text-xl sm:text-2xl md:text-3xl">My Favorites</CardTitle>
             </div>
             <CardDescription className="text-sm sm:text-base md:text-lg">
-              Your saved images from Unsplash, Pexels, and Pixabay
+              Your personal collection of saved images
             </CardDescription>
           </CardHeader>
         </Card>
@@ -104,12 +120,24 @@ export function FavoritesView() {
             <CardTitle className="text-xl sm:text-2xl md:text-3xl">My Favorites</CardTitle>
           </div>
           <CardDescription className="text-sm sm:text-base md:text-lg">
-            Your saved images from Unsplash, Pexels, and Pixabay
+            Your personal collection of saved images
           </CardDescription>
           <div className="flex items-center justify-center space-x-2 mt-4">
             <Badge variant="secondary" className="hover:scale-105 transition-transform duration-200 text-xs sm:text-sm">
-              {favorites.length} images saved
+              {favorites.length} total images
             </Badge>
+            {regularFavorites.length > 0 && (
+              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 hover:scale-105 transition-transform duration-200 text-xs sm:text-sm">
+                <Search className="h-3 w-3 mr-1" />
+                {regularFavorites.length} search
+              </Badge>
+            )}
+            {nasaFavorites.length > 0 && (
+              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 hover:scale-105 transition-transform duration-200 text-xs sm:text-sm">
+                <Rocket className="h-3 w-3 mr-1" />
+                {nasaFavorites.length} NASA
+              </Badge>
+            )}
           </div>
         </CardHeader>
       </Card>
@@ -127,16 +155,64 @@ export function FavoritesView() {
           </CardContent>
         </Card>
       ) : (
-        <div className="animate-fade-in-up">
-          <ImageGrid
-            images={favoriteImages}
-            favorites={favorites}
-            onToggleFavorite={handleRemoveFavorite}
-            onImageClick={handleImageClick}
-            showRemoveButton={true}
-            isLoading={isRemoving}
-            loadingImageId={removingImageId}
-          />
+        <div className="space-y-8">
+          {/* Regular Favorites Section */}
+          {regularFavorites.length > 0 && (
+            <div className="animate-fade-in-up">
+              <Card className="mb-6">
+                <CardHeader className="px-4 sm:px-6 py-4">
+                  <div className="flex items-center space-x-2">
+                    <Search className="h-5 w-5 text-blue-400" />
+                    <CardTitle className="text-lg sm:text-xl text-blue-400">Search Favorites</CardTitle>
+                    <Badge variant="secondary" className="text-xs">
+                      {regularFavorites.length} images
+                    </Badge>
+                  </div>
+                  <CardDescription className="text-sm text-muted-foreground">
+                    Images saved from Unsplash, Pexels, and Pixabay
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+              <ImageGrid
+                images={regularFavoriteImages}
+                favorites={favorites}
+                onToggleFavorite={handleRemoveFavorite}
+                onImageClick={handleImageClick}
+                showRemoveButton={true}
+                isLoading={isRemoving}
+                loadingImageId={removingImageId}
+              />
+            </div>
+          )}
+
+          {/* NASA Favorites Section */}
+          {nasaFavorites.length > 0 && (
+            <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+              <Card className="mb-6 border-blue-500/30 bg-blue-500/5">
+                <CardHeader className="px-4 sm:px-6 py-4">
+                  <div className="flex items-center space-x-2">
+                    <Rocket className="h-5 w-5 text-blue-400" />
+                    <CardTitle className="text-lg sm:text-xl text-blue-400">NASA Space Collection</CardTitle>
+                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs">
+                      {nasaFavorites.length} images
+                    </Badge>
+                  </div>
+                  <CardDescription className="text-sm text-muted-foreground">
+                    Space images saved from NASA Explorer
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+              <ImageGrid
+                images={nasaFavoriteImages}
+                favorites={favorites}
+                onToggleFavorite={handleRemoveFavorite}
+                onImageClick={handleImageClick}
+                showRemoveButton={true}
+                isLoading={isRemoving}
+                loadingImageId={removingImageId}
+              />
+            </div>
+          )}
         </div>
       )}
 

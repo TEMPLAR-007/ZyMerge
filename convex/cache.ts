@@ -121,3 +121,44 @@ export const countUserSearchRequests = query({
         return { count: count.length };
     },
 });
+
+export const getUserSearchWindow = query({
+    args: {
+        userId: v.id("users"),
+    },
+    handler: async (ctx, args) => {
+        const userWindow = await ctx.db
+            .query("userSearchWindows")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .unique();
+        return userWindow;
+    },
+});
+
+export const setUserSearchWindow = mutation({
+    args: {
+        userId: v.id("users"),
+        windowStart: v.number(),
+    },
+    handler: async (ctx, args) => {
+        const existing = await ctx.db
+            .query("userSearchWindows")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .unique();
+
+        if (existing) {
+            await ctx.db.patch(existing._id, {
+                windowStart: args.windowStart,
+                updatedAt: Date.now(),
+            });
+        } else {
+            await ctx.db.insert("userSearchWindows", {
+                userId: args.userId,
+                windowStart: args.windowStart,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+            });
+        }
+        return true;
+    },
+});

@@ -220,6 +220,47 @@ body {
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #1f2937;
+}
+
+html::-webkit-scrollbar {
+  width: 8px;
+}
+
+html::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.5);
+}
+
+html::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+  transition: background-color 0.2s ease, opacity 0.3s ease;
+  opacity: 0.7;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+  opacity: 1;
+}
+
+/* Light theme for html scrollbar */
+@media (prefers-color-scheme: light) {
+  html {
+    scrollbar-color: #9ca3af #f3f4f6;
+  }
+
+  html::-webkit-scrollbar-track {
+    background: rgba(243, 244, 246, 0.8);
+  }
+
+  html::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+  }
+
+  html::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+  }
 }
 
 /* Loading states */
@@ -350,6 +391,7 @@ button[data-variant="outline"]:hover:not(:disabled) {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
 /* Modern
  border radius and shadows */
 .modern-card {
@@ -437,4 +479,193 @@ header {
 .form-group:focus-within {
   border-color: hsl(var(--ring) / 0.5);
   box-shadow: 0 0 0 1px hsl(var(--ring) / 0.1);
+}
+
+/* Smooth placeholder animations */
+.placeholder-fade {
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.placeholder-fade.transitioning {
+  opacity: 0.3;
+}
+
+/* Enhanced placeholder animation */
+@keyframes placeholder-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.placeholder-animated::placeholder {
+  animation: placeholder-pulse 3s ease-in-out infinite;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Explore button animations */
+@keyframes rocket-float {
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-2px) rotate(2deg);
+  }
+}
+
+@keyframes cosmic-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.3), 0 0 10px rgba(147, 51, 234, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(147, 51, 234, 0.3);
+  }
+}
+
+@keyframes sparkle-twinkle {
+
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Explore button specific classes */
+.explore-button-inactive {
+  position: relative;
+  background: linear-gradient(-45deg, transparent, rgba(59, 130, 246, 0.05), rgba(147, 51, 234, 0.05), transparent);
+  background-size: 400% 400%;
+  animation: gradient-shift 4s ease infinite;
+}
+
+.explore-button-inactive:hover .rocket-icon {
+  animation: rocket-float 1s ease-in-out infinite;
+}
+
+.explore-button-active {
+  animation: cosmic-glow 2s ease-in-out infinite;
+}
+
+.explore-sparkle {
+  animation: sparkle-twinkle 1.5s ease-in-out infinite;
+}
+
+/* Custom scrollbar for all scrollable areas */
+.custom-scrollbar,
+.overflow-y-auto,
+.overflow-x-auto,
+.overflow-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #1f2937;
+}
+
+.custom-scrollbar::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-x-auto::-webkit-scrollbar,
+.overflow-auto::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+.overflow-y-auto::-webkit-scrollbar-track,
+.overflow-x-auto::-webkit-scrollbar-track,
+.overflow-auto::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.5);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.overflow-y-auto::-webkit-scrollbar-thumb,
+.overflow-x-auto::-webkit-scrollbar-thumb,
+.overflow-auto::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+  transition: background-color 0.2s ease, opacity 0.3s ease;
+  opacity: 0.7;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.overflow-y-auto::-webkit-scrollbar-thumb:hover,
+.overflow-x-auto::-webkit-scrollbar-thumb:hover,
+.overflow-auto::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+  opacity: 1;
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner,
+.overflow-y-auto::-webkit-scrollbar-corner,
+.overflow-x-auto::-webkit-scrollbar-corner,
+.overflow-auto::-webkit-scrollbar-corner {
+  background: rgba(31, 41, 55, 0.5);
+}
+
+/* Light theme scrollbar variants */
+@media (prefers-color-scheme: light) {
+
+  .custom-scrollbar,
+  .overflow-y-auto,
+  .overflow-x-auto,
+  .overflow-auto {
+    scrollbar-color: #9ca3af #f3f4f6;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track,
+  .overflow-y-auto::-webkit-scrollbar-track,
+  .overflow-x-auto::-webkit-scrollbar-track,
+  .overflow-auto::-webkit-scrollbar-track {
+    background: rgba(243, 244, 246, 0.8);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb,
+  .overflow-y-auto::-webkit-scrollbar-thumb,
+  .overflow-x-auto::-webkit-scrollbar-thumb,
+  .overflow-auto::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+  .overflow-x-auto::-webkit-scrollbar-thumb:hover,
+  .overflow-auto::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-corner,
+  .overflow-y-auto::-webkit-scrollbar-corner,
+  .overflow-x-auto::-webkit-scrollbar-corner,
+  .overflow-auto::-webkit-scrollbar-corner {
+    background: rgba(243, 244, 246, 0.8);
+  }
 }

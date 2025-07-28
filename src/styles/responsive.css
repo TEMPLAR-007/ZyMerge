@@ -18,6 +18,7 @@
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -51,7 +52,7 @@
     min-height: 44px;
     min-width: 44px;
   }
-  
+
   /* Thinner borders on mobile for better touch experience */
   input[type="text"],
   input[type="email"],
@@ -61,7 +62,7 @@
   select {
     border-width: 1px;
   }
-  
+
   /* Reduced focus ring on mobile */
   button:focus-visible,
   a:focus-visible,
@@ -76,12 +77,6 @@
 @media (max-width: 768px) {
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  
-  .overflow-x-auto::-webkit-scrollbar {
-    display: none;
   }
 }
 

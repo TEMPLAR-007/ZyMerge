@@ -27,4 +27,21 @@ export default defineSchema({
     userId: v.id("users"),
     timestamp: v.number(),
   }).index("by_user_time", ["userId", "timestamp"]),
+
+  userSearchWindows: defineTable({
+    userId: v.id("users"),
+    windowStart: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  userSubscriptions: defineTable({
+    userId: v.id("users"),
+    tier: v.union(v.literal("free"), v.literal("premium"), v.literal("pro")),
+    status: v.union(v.literal("active"), v.literal("cancelled"), v.literal("expired")),
+    startDate: v.number(),
+    endDate: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]).index("by_tier", ["tier"]),
 });

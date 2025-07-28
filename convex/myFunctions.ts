@@ -1,9 +1,7 @@
 import { v } from "convex/values";
-import { query, mutation, action } from "./_generated/server";
+import { query, mutation, action, internalMutation } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { getSearchCache, setSearchCache } from "./cache";
 import { api } from "./_generated/api";
-import { Id } from "./_generated/dataModel";
 
 export const searchImages: ReturnType<typeof action> = action({
   args: {
@@ -13,17 +11,59 @@ export const searchImages: ReturnType<typeof action> = action({
   },
   handler: async (ctx, args): Promise<any> => {
     "use node";
-    // --- API rate limiting ---
+
+    // --- API rate limiting with rolling window and tiered limits ---
     const userId = await getAuthUserId(ctx);
     const now = Date.now();
-    const oneHourAgo = now - 60 * 60 * 1000;
+
     let searchCount = 0;
+    let windowStart = 0;
+    let windowEnd = 0;
+    let hourlyLimit = 100; // Default limit for free users
+
     if (userId) {
-      searchCount = (await ctx.runQuery(api.cache.countUserSearchRequests, { userId, since: oneHourAgo })).count;
+      // Get user's tier and limits (for now, all users are free tier)
+      // TODO: Implement premium tier detection based on subscription
+      hourlyLimit = 100; // Free tier: 100 searches per hour
+
+      // Get user's search window info
+      const userWindow = await ctx.runQuery(api.cache.getUserSearchWindow, { userId });
+
+      if (userWindow && userWindow.windowStart) {
+        // Use existing rolling window
+        windowStart = userWindow.windowStart;
+        windowEnd = windowStart + (60 * 60 * 1000); // 1 hour window
+
+        // If current time is past window end, reset the window
+        if (now >= windowEnd) {
+          windowStart = now;
+          windowEnd = now + (60 * 60 * 1000);
+          await ctx.runMutation(api.cache.setUserSearchWindow, {
+            userId,
+            windowStart: now
+          });
+        }
+      } else {
+        // First time user, create new window
+        windowStart = now;
+        windowEnd = now + (60 * 60 * 1000);
+        await ctx.runMutation(api.cache.setUserSearchWindow, {
+          userId,
+          windowStart: now
+        });
+      }
+
+      // Count searches from the current rolling window
+      searchCount = (await ctx.runQuery(api.cache.countUserSearchRequests, {
+        userId,
+        since: windowStart
+      })).count;
     }
-    if (searchCount >= 30) {
-      throw new Error("Rate limit exceeded: 30 searches per hour");
+
+    if (searchCount >= hourlyLimit) {
+      throw new Error(`Rate limit exceeded: ${hourlyLimit} searches per hour`);
     }
+
     // Log this search
     if (userId) {
       await ctx.runMutation(api.cache.logUserSearchRequest, { userId, timestamp: now });
@@ -33,6 +73,7 @@ export const searchImages: ReturnType<typeof action> = action({
     const perProvider = args.perProvider ?? 20;
     const page = args.page ?? 1;
     const cacheKey = `search:${rawQuery}:${page}:${perProvider}`;
+
     // Check cache via query
     const cached: any = await ctx.runQuery(api.cache.getSearchCache, { key: cacheKey });
     if (cached && now < cached.expiresAt) {
@@ -76,6 +117,7 @@ export const searchImages: ReturnType<typeof action> = action({
     const unsplashPage = typeof lastPages.unsplash === 'number' ? lastPages.unsplash : 1;
     const pexelsPage = typeof lastPages.pexels === 'number' ? lastPages.pexels : 1;
     const pixabayPage = typeof lastPages.pixabay === 'number' ? lastPages.pixabay : 1;
+
     const unsplashPromise = fetch(
       `https://api.unsplash.com/search/photos?query=${query}&per_page=${perProvider}&page=${unsplashPage}`,
       {
@@ -92,8 +134,8 @@ export const searchImages: ReturnType<typeof action> = action({
         images: (data.results || []).map((img: any) => ({
           provider: "unsplash",
           id: img.id,
-          url: img.urls?.regular,
-          thumb: img.urls?.thumb,
+          url: img.urls?.regular || img.urls?.full,
+          thumb: img.urls?.small || img.urls?.thumb,
           alt: img.alt_description || img.description || "",
           link: img.links?.html,
           credit: img.user?.name || "Unknown",
@@ -124,8 +166,8 @@ export const searchImages: ReturnType<typeof action> = action({
         images: (data.photos || []).map((img: any) => ({
           provider: "pexels",
           id: img.id,
-          url: img.src?.large,
-          thumb: img.src?.tiny,
+          url: img.src?.large2x || img.src?.large,
+          thumb: img.src?.medium || img.src?.small,
           alt: img.alt || "",
           link: img.url,
           credit: img.photographer || "Unknown",
@@ -149,20 +191,48 @@ export const searchImages: ReturnType<typeof action> = action({
         }
         return await res.json();
       })
-      .then((data: any) => ({
-        images: (data.hits || []).map((img: any) => ({
-          provider: "pixabay",
-          id: img.id,
-          url: img.webformatURL,
-          thumb: img.previewURL,
-          alt: img.tags || "",
-          link: img.pageURL,
-          credit: img.user || "Unknown",
-          creditUrl: `https://pixabay.com/users/${img.user}-${img.user_id}/`,
-        })),
-        total: data.totalHits || 0,
-        totalPages: Math.ceil((data.totalHits || 0) / perProvider)
-      }))
+      .then((data: any) => {
+        // Debug: Log the first image to see the structure
+        if (data.hits && data.hits.length > 0) {
+          console.log("Pixabay first image structure:", {
+            id: data.hits[0].id,
+            webformatURL: data.hits[0].webformatURL,
+            largeImageURL: data.hits[0].largeImageURL,
+            imageURL: data.hits[0].imageURL,
+            previewURL: data.hits[0].previewURL,
+            tags: data.hits[0].tags,
+            user: data.hits[0].user
+          });
+
+          // Debug: Check what URLs are being mapped
+          const mappedImage = {
+            provider: "pixabay",
+            id: data.hits[0].id,
+            url: data.hits[0].webformatURL || data.hits[0].largeImageURL || data.hits[0].imageURL,
+            thumb: data.hits[0].previewURL || data.hits[0].webformatURL || data.hits[0].largeImageURL,
+            alt: data.hits[0].tags || data.hits[0].user || "Pixabay Image",
+            link: data.hits[0].pageURL,
+            credit: data.hits[0].user || "Unknown",
+            creditUrl: `https://pixabay.com/users/${data.hits[0].user}-${data.hits[0].user_id}/`,
+          };
+          console.log("Pixabay mapped image:", mappedImage);
+        }
+
+        return {
+          images: (data.hits || []).map((img: any) => ({
+            provider: "pixabay",
+            id: img.id,
+            url: img.webformatURL || img.largeImageURL || img.imageURL,
+            thumb: img.previewURL || img.webformatURL || img.largeImageURL,
+            alt: img.tags || img.user || "Pixabay Image",
+            link: img.pageURL,
+            credit: img.user || "Unknown",
+            creditUrl: `https://pixabay.com/users/${img.user}-${img.user_id}/`,
+          })),
+          total: data.totalHits || 0,
+          totalPages: Math.ceil((data.totalHits || 0) / perProvider)
+        };
+      })
       .catch(() => ({
         images: [],
         total: 0,
@@ -176,22 +246,33 @@ export const searchImages: ReturnType<typeof action> = action({
     ]);
 
     const allImages = [...unsplash.images, ...pexels.images, ...pixabay.images];
-    const totalImages = unsplash.total + pexels.total + pixabay.total;
-    const maxTotalPages = Math.max(unsplash.totalPages, pexels.totalPages, pixabay.totalPages);
 
-    const currentPage = page === 'last' ? maxTotalPages : (typeof page === 'number' ? page : 1);
+    // Simplified pagination for Load More functionality
+    const currentPage = typeof page === 'number' ? page : 1;
+    const hasNextPage = currentPage < Math.max(unsplash.totalPages, pexels.totalPages, pixabay.totalPages);
 
     const results = {
       images: allImages,
       pagination: {
         currentPage,
-        totalImages,
-        totalPages: maxTotalPages,
-        hasNextPage: typeof currentPage === 'number' ? currentPage < maxTotalPages : false,
-        hasPrevPage: typeof currentPage === 'number' ? currentPage > 1 : false
+        totalImages: allImages.length,
+        hasNextPage,
+        // Add provider-specific info for better context
+        providerStats: {
+          unsplash: { count: unsplash.images.length, total: unsplash.total },
+          pexels: { count: pexels.images.length, total: pexels.total },
+          pixabay: { count: pixabay.images.length, total: pixabay.total }
+        }
+      },
+      // Add rate limit information with fixed window
+      rateLimit: {
+        used: searchCount + 1, // +1 for this current search
+        limit: hourlyLimit,
+        resetTime: windowEnd // Next hour boundary
       }
     };
-    const expiresAt = now + 5 * 60 * 1000; // 5 minutes
+
+    const expiresAt = now + 5 * 60 * 1000;
     await ctx.runMutation(api.cache.setSearchCache, {
       key: cacheKey,
       results,
@@ -199,6 +280,7 @@ export const searchImages: ReturnType<typeof action> = action({
       expiresAt,
       hitCount: cached ? cached.hitCount + 1 : 1,
     });
+
     return results;
   },
 });
@@ -224,7 +306,9 @@ export const addFavorite = mutation({
         q.eq("userId", userId).eq("provider", args.provider).eq("imageId", args.imageId)
       )
       .unique();
+
     if (existing) return existing._id;
+
     return await ctx.db.insert("favorites", {
       userId,
       provider: args.provider,
@@ -248,12 +332,14 @@ export const removeFavorite = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
+
     const existing = await ctx.db
       .query("favorites")
       .withIndex("by_user_image", (q) =>
         q.eq("userId", userId).eq("provider", args.provider).eq("imageId", args.imageId)
       )
       .unique();
+
     if (existing) {
       await ctx.db.delete(existing._id);
       return true;
@@ -267,9 +353,103 @@ export const listFavorites = query({
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
+
     return await ctx.db
       .query("favorites")
       .withIndex("by_user_image", (q) => q.eq("userId", userId))
       .collect();
+  },
+});
+
+export const getUserSearchCount = query({
+  args: {},
+  returns: v.object({
+    count: v.number(),
+    limit: v.number(),
+    tier: v.string(),
+    timeUntilReset: v.union(v.object({
+      minutes: v.number(),
+      seconds: v.number(),
+      totalSeconds: v.number()
+    }), v.null())
+  }),
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return { count: 0, limit: 100, tier: "free", timeUntilReset: null };
+
+    const now = Date.now();
+
+    // Get user's tier and limits (for now, all users are free tier)
+    // TODO: Implement premium tier detection based on subscription
+    const userTier = "free";
+    const hourlyLimit = 100; // Free tier: 100 searches per hour
+
+    // Get user's search window info
+    const userWindow: any = await ctx.runQuery(api.cache.getUserSearchWindow, { userId });
+
+    if (!userWindow || !userWindow.windowStart) {
+      return { count: 0, limit: hourlyLimit, tier: userTier, timeUntilReset: null };
+    }
+
+    const windowStart: number = userWindow.windowStart;
+    const windowEnd: number = windowStart + (60 * 60 * 1000); // 1 hour window
+
+    // Get searches from the current rolling window
+    const searchRequests: any[] = await ctx.db
+      .query("searchRequests")
+      .withIndex("by_user_time", (q) => q.eq("userId", userId).gte("timestamp", windowStart))
+      .collect();
+
+    // Calculate time until window reset
+    const timeLeft: number = windowEnd - now;
+    let timeUntilReset: any = null;
+
+    if (searchRequests.length >= hourlyLimit) {
+      const minutes = Math.floor(timeLeft / (1000 * 60));
+      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+      timeUntilReset = { minutes, seconds, totalSeconds: Math.floor(timeLeft / 1000) };
+    }
+
+    return {
+      count: searchRequests.length,
+      limit: hourlyLimit,
+      tier: userTier,
+      timeUntilReset
+    };
+  },
+});
+
+// Cleanup function to remove old search requests and windows
+// This ensures we don't accumulate too much data while keeping enough for the rolling window
+export const cleanupOldSearchRequests = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+
+    // Clean up old search requests (older than 2 hours)
+    const oldRequests = await ctx.db
+      .query("searchRequests")
+      .filter((q) => q.lt(q.field("timestamp"), twoHoursAgo))
+      .collect();
+
+    for (const request of oldRequests) {
+      await ctx.db.delete(request._id);
+    }
+
+    // Clean up old user search windows (older than 24 hours)
+    const oldWindows = await ctx.db
+      .query("userSearchWindows")
+      .filter((q) => q.lt(q.field("updatedAt"), oneDayAgo))
+      .collect();
+
+    for (const window of oldWindows) {
+      await ctx.db.delete(window._id);
+    }
+
+    return {
+      deletedRequests: oldRequests.length,
+      deletedWindows: oldWindows.length
+    };
   },
 });

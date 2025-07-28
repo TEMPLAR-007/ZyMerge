@@ -866,7 +866,7 @@ export function ImageModal({ image, isOpen, onClose, isFavorited, onToggleFavori
                     </div>
 
                     {/* Image */}
-                    <div className="relative flex-1 bg-gray-100 dark:bg-gray-800 overflow-auto p-2 sm:p-4 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-200 dark:scrollbar-track-gray-800">
+                    <div className="relative flex-1 bg-gray-100 dark:bg-gray-800 overflow-auto p-2 sm:p-4">
                         {loading && (
                             <div className="flex items-center justify-center h-64 w-full">
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>

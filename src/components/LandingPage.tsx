@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Logo, CustomLogo } from "./Logo";
-import { Search, Heart, Zap } from "lucide-react";
+import { Search, Heart, Zap, Star } from "lucide-react";
 import { useConvexAuth } from "convex/react";
 
 interface LandingPageProps {
@@ -49,6 +49,10 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
                                     <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
                                     Pixabay
                                 </Badge>
+                                <Badge variant="secondary" className="px-4 py-2 text-sm hover:scale-105 transition-transform duration-200">
+                                    <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mr-2"></div>
+                                    + Explore
+                                </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">
                                 • More sources coming soon
@@ -83,15 +87,15 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
                 <div className="container mx-auto max-w-6xl">
                     <div>
                         <h2 className="text-3xl font-bold text-center mb-12">Why Choose ZyMerge?</h2>
-                        <div className="grid md:grid-cols-3 gap-8">
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                             <Card className="border-gray-700 hover:shadow-lg hover:scale-105 transition-all duration-300" style={{ backgroundColor: '#171717' }}>
                                 <CardHeader>
-                                    <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mb-4 hover:scale-110 transition-transform duration-200">
-                                        <Search className="h-6 w-6 text-blue-400" />
+                                    <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4 hover:scale-110 transition-transform duration-200">
+                                        <Zap className="h-6 w-6 text-purple-400" />
                                     </div>
                                     <CardTitle>Multi-Source Search</CardTitle>
                                     <CardDescription>
-                                        Search across multiple premium image platforms simultaneously. Get the best results from Unsplash, Pexels, and Pixabay in one place.
+                                        Search across multiple high-quality image platforms simultaneously. Get the best results from Unsplash, Pexels, Pixabay, and NASA in one place.
                                     </CardDescription>
                                 </CardHeader>
                             </Card>
@@ -110,8 +114,8 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
 
                             <Card className="border-gray-700 hover:shadow-lg hover:scale-105 transition-all duration-300" style={{ backgroundColor: '#171717' }}>
                                 <CardHeader>
-                                    <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4 hover:scale-110 transition-transform duration-200">
-                                        <Zap className="h-6 w-6 text-purple-400" />
+                                    <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center mb-4 hover:scale-110 transition-transform duration-200">
+                                        <Zap className="h-6 w-6 text-orange-400" />
                                     </div>
                                     <CardTitle>Lightning Fast</CardTitle>
                                     <CardDescription>
@@ -120,6 +124,90 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
                                 </CardHeader>
                             </Card>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Premium Features Section */}
+            <section className="py-16 px-4 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-purple-900/20 border-y border-purple-500/20">
+                <div className="container mx-auto max-w-6xl">
+                    <div className="text-center mb-12">
+                        <div className="relative inline-block mb-6">
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-full blur-xl"></div>
+                            <div className="relative w-16 h-16 mx-auto bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                                <Star className="h-8 w-8 text-white" />
+                            </div>
+                        </div>
+                        <h2 className="text-3xl sm:text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                            Choose Your Plan
+                        </h2>
+                        <p className="text-lg text-muted-foreground mb-8 max-w-3xl mx-auto">
+                            Start free and upgrade when you need more power. All plans include our core features with generous search limits.
+                        </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                        {/* Free Tier */}
+                        <Card className="border-gray-700 hover:shadow-lg hover:scale-105 transition-all duration-300" style={{ backgroundColor: '#171717' }}>
+                            <CardHeader className="text-center">
+                                <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mx-auto mb-4">
+                                    <Heart className="h-6 w-6 text-green-400" />
+                                </div>
+                                <CardTitle className="text-green-400">Free</CardTitle>
+                                <CardDescription className="text-muted-foreground">
+                                    Perfect for casual users and getting started
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="text-center">
+                                <div className="text-3xl font-bold text-white mb-4">$0<span className="text-lg text-muted-foreground">/month</span></div>
+                                <ul className="space-y-2 text-sm text-muted-foreground mb-6">
+                                    <li>✓ 100 searches per hour</li>
+                                    <li>✓ 500 searches per day</li>
+                                    <li>✓ Multi-source search</li>
+                                    <li>✓ Save favorites</li>
+                                    <li>✓ Basic filters</li>
+                                </ul>
+                                <Button variant="outline" className="w-full">
+                                    Start Free
+                                </Button>
+                            </CardContent>
+                        </Card>
+
+                        {/* Premium Tier */}
+                        <Card className="border-purple-500/50 hover:shadow-lg hover:scale-105 transition-all duration-300 relative overflow-hidden" style={{ backgroundColor: '#171717' }}>
+                            <div className="absolute top-0 right-0 bg-gradient-to-l from-purple-500 to-blue-500 text-white text-xs px-3 py-1 rounded-bl-lg">
+                                Popular
+                            </div>
+                            <CardHeader className="text-center">
+                                <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-4">
+                                    <Zap className="h-6 w-6 text-purple-400" />
+                                </div>
+                                <CardTitle className="text-purple-400">Premium</CardTitle>
+                                <CardDescription className="text-muted-foreground">
+                                    For power users and professionals
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="text-center">
+                                <div className="text-3xl font-bold text-white mb-4">$9.99<span className="text-lg text-muted-foreground">/month</span></div>
+                                <ul className="space-y-2 text-sm text-muted-foreground mb-6">
+                                    <li>✓ 500 searches per hour</li>
+                                    <li>✓ 2,000 searches per day</li>
+                                    <li>✓ Everything in Free</li>
+                                    <li>✓ Advanced filters</li>
+                                    <li>✓ Priority support</li>
+                                    <li>✓ No ads</li>
+                                </ul>
+                                <Button className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">
+                                    Upgrade to Premium
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <div className="text-center mt-8">
+                        <p className="text-sm text-purple-300/80">
+                            ✨ All plans include rolling window rate limits • 🚀 Upgrade anytime • 💰 Cancel anytime
+                        </p>
                     </div>
                 </div>
             </section>

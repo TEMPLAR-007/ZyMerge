@@ -73,7 +73,7 @@ export function Pagination({ pagination, loading, onPageChange }: PaginationProp
         <span className="sm:hidden">Prev</span>
       </Button>
 
-      <div className="flex items-center gap-1 overflow-x-auto max-w-[60vw] sm:max-w-none">
+      <div className="flex items-center gap-1 overflow-x-auto max-w-[60vw] sm:max-w-none custom-scrollbar">
         {renderPageNumbers()}
       </div>
 
