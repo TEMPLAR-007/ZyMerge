@@ -1,41 +1,67 @@
 import { v } from "convex/values";
 import { query, mutation, action } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { getSearchCache, setSearchCache } from "./cache";
+import { api } from "./_generated/api";
+import { Id } from "./_generated/dataModel";
 
-export const searchImages = action({
+export const searchImages: ReturnType<typeof action> = action({
   args: {
     query: v.string(),
     perProvider: v.optional(v.number()),
     page: v.optional(v.union(v.number(), v.string())), // allow 'last'
   },
-  handler: async (_ctx, args) => {
+  handler: async (ctx, args): Promise<any> => {
     "use node";
+    // --- API rate limiting ---
+    const userId = await getAuthUserId(ctx);
+    const now = Date.now();
+    const oneHourAgo = now - 60 * 60 * 1000;
+    let searchCount = 0;
+    if (userId) {
+      searchCount = (await ctx.runQuery(api.cache.countUserSearchRequests, { userId, since: oneHourAgo })).count;
+    }
+    if (searchCount >= 30) {
+      throw new Error("Rate limit exceeded: 30 searches per hour");
+    }
+    // Log this search
+    if (userId) {
+      await ctx.runMutation(api.cache.logUserSearchRequest, { userId, timestamp: now });
+    }
 
-    const query = encodeURIComponent(args.query);
+    const rawQuery = args.query.toLowerCase().trim();
     const perProvider = args.perProvider ?? 20;
     const page = args.page ?? 1;
-
-    const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
-    const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
-    const PIXABAY_API_KEY = process.env.PIXABAY_API_KEY;
-
-    if (!UNSPLASH_ACCESS_KEY || !PEXELS_API_KEY || !PIXABAY_API_KEY) {
-      throw new Error("Missing one or more image API keys in environment variables.");
+    const cacheKey = `search:${rawQuery}:${page}:${perProvider}`;
+    // Check cache via query
+    const cached: any = await ctx.runQuery(api.cache.getSearchCache, { key: cacheKey });
+    if (cached && now < cached.expiresAt) {
+      // Update hitCount in background (not blocking)
+      await ctx.runMutation(api.cache.setSearchCache, {
+        key: cacheKey,
+        results: cached.results,
+        timestamp: cached.timestamp,
+        expiresAt: cached.expiresAt,
+        hitCount: cached.hitCount + 1,
+      });
+      return cached.results;
     }
+
+    const query = encodeURIComponent(args.query);
 
     async function getTotalPages() {
       const [unsplash, pexels, pixabay] = await Promise.all([
         fetch(`https://api.unsplash.com/search/photos?query=${query}&per_page=1&page=1`, {
-          headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` },
+          headers: { Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}` },
         })
           .then(async (res) => (res.ok ? res.json() : { total: 0 }))
           .then((data) => Math.ceil((data.total || 0) / perProvider)),
         fetch(`https://api.pexels.com/v1/search?query=${query}&per_page=1&page=1`, {
-          headers: { Authorization: String(PEXELS_API_KEY) },
+          headers: { Authorization: String(process.env.PEXELS_API_KEY) },
         })
           .then(async (res) => (res.ok ? res.json() : { total_results: 0 }))
           .then((data) => Math.ceil((data.total_results || 0) / perProvider)),
-        fetch(`https://pixabay.com/api/?key=${PIXABAY_API_KEY}&q=${query}&per_page=1&page=1`)
+        fetch(`https://pixabay.com/api/?key=${process.env.PIXABAY_API_KEY}&q=${query}&per_page=1&page=1`)
           .then(async (res) => (res.ok ? res.json() : { totalHits: 0 }))
           .then((data) => Math.ceil((data.totalHits || 0) / perProvider)),
       ]);
@@ -53,7 +79,7 @@ export const searchImages = action({
     const unsplashPromise = fetch(
       `https://api.unsplash.com/search/photos?query=${query}&per_page=${perProvider}&page=${unsplashPage}`,
       {
-        headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` },
+        headers: { Authorization: `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}` },
       }
     )
       .then(async (res: Response) => {
@@ -85,7 +111,7 @@ export const searchImages = action({
     const pexelsPromise = fetch(
       `https://api.pexels.com/v1/search?query=${query}&per_page=${perProvider}&page=${pexelsPage}`,
       {
-        headers: { Authorization: String(PEXELS_API_KEY) },
+        headers: { Authorization: String(process.env.PEXELS_API_KEY) },
       }
     )
       .then(async (res: Response) => {
@@ -115,7 +141,7 @@ export const searchImages = action({
       }));
 
     const pixabayPromise = fetch(
-      `https://pixabay.com/api/?key=${PIXABAY_API_KEY}&q=${query}&per_page=${perProvider}&page=${pixabayPage}`
+      `https://pixabay.com/api/?key=${process.env.PIXABAY_API_KEY}&q=${query}&per_page=${perProvider}&page=${pixabayPage}`
     )
       .then(async (res: Response) => {
         if (!res.ok) {
@@ -155,7 +181,7 @@ export const searchImages = action({
 
     const currentPage = page === 'last' ? maxTotalPages : (typeof page === 'number' ? page : 1);
 
-    return {
+    const results = {
       images: allImages,
       pagination: {
         currentPage,
@@ -165,6 +191,15 @@ export const searchImages = action({
         hasPrevPage: typeof currentPage === 'number' ? currentPage > 1 : false
       }
     };
+    const expiresAt = now + 5 * 60 * 1000; // 5 minutes
+    await ctx.runMutation(api.cache.setSearchCache, {
+      key: cacheKey,
+      results,
+      timestamp: now,
+      expiresAt,
+      hitCount: cached ? cached.hitCount + 1 : 1,
+    });
+    return results;
   },
 });
 
@@ -182,7 +217,7 @@ export const addFavorite = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
-    
+
     const existing = await ctx.db
       .query("favorites")
       .withIndex("by_user_image", (q) =>

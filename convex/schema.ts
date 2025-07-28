@@ -16,4 +16,15 @@ export default defineSchema({
     creditUrl: v.optional(v.string()),
     createdAt: v.number(),
   }).index("by_user_image", ["userId", "provider", "imageId"]),
+  searchCache: defineTable({
+    key: v.string(),
+    results: v.any(),
+    timestamp: v.number(),
+    expiresAt: v.number(),
+    hitCount: v.number(),
+  }).index("by_key", ["key"]),
+  searchRequests: defineTable({
+    userId: v.id("users"),
+    timestamp: v.number(),
+  }).index("by_user_time", ["userId", "timestamp"]),
 });
