@@ -223,23 +223,19 @@ export function ImageModal({
             cropSettings.width < 100 || cropSettings.height < 100;
 
         if (isCropped) {
-            // When cropped, make the cropped portion fill the entire viewport
-            // Calculate the scale factor to make the cropped area fill the container
-            const cropAspectRatio = (cropSettings.width / 100) / (cropSettings.height / 100);
-            const containerAspectRatio = containerMaxWidth / containerMaxHeight;
+            // When cropped, scale the image so the cropped portion fits nicely in the container
+            // Calculate the effective size of the cropped area
+            const croppedWidth = finalWidth * (cropSettings.width / 100);
+            const croppedHeight = finalHeight * (cropSettings.height / 100);
 
-            let scaleFactor;
-            if (cropAspectRatio > containerAspectRatio) {
-                // Crop is wider than container, scale by width
-                scaleFactor = containerMaxWidth / (finalWidth * (cropSettings.width / 100));
-            } else {
-                // Crop is taller than container, scale by height
-                scaleFactor = containerMaxHeight / (finalHeight * (cropSettings.height / 100));
-            }
+            // Calculate how much we need to scale to fit the cropped area in the container
+            const scaleX = containerMaxWidth / croppedWidth;
+            const scaleY = containerMaxHeight / croppedHeight;
+            const scale = Math.min(scaleX, scaleY, 1); // Don't scale up beyond original size
 
-            // Apply the scale factor to make cropped area fill the container
-            style.width = finalWidth * scaleFactor;
-            style.height = finalHeight * scaleFactor;
+            // Apply the scale factor
+            style.width = finalWidth * scale;
+            style.height = finalHeight * scale;
 
             // Apply clip path to show only the cropped area
             style.clipPath = `inset(${cropSettings.y}% ${100 - cropSettings.x - cropSettings.width}% ${100 - cropSettings.y - cropSettings.height}% ${cropSettings.x}%)`;
