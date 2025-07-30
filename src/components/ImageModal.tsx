@@ -471,56 +471,228 @@ export function ImageModal({
             const finalDimensions = getFinalDimensions();
             const baseDimensions = getBaseDimensions();
 
-            // Try direct download first for all images
-            try {
-                const response = await fetch(image.url, {
-                    method: 'GET',
-                    mode: 'cors',
-                    headers: {
-                        'Accept': 'image/*',
-                    }
-                });
+            // Special handling for NASA images
+            if (image.provider === 'nasa') {
+                // For NASA images, try multiple download methods
+                const downloadMethods = [
+                    // Method 1: Direct fetch with CORS
+                    async () => {
+                        const response = await fetch(image.url, {
+                            method: 'GET',
+                            mode: 'cors',
+                            headers: {
+                                'Accept': 'image/*',
+                            }
+                        });
 
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `${image.provider}-${image.id}-${finalDimensions.width}x${finalDimensions.height}.jpg`;
-                    a.style.display = 'none';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    return;
+                        if (response.ok) {
+                            const blob = await response.blob();
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `nasa-${image.id}-${finalDimensions.width}x${finalDimensions.height}.jpg`;
+                            a.style.display = 'none';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                            return true;
+                        }
+                        return false;
+                    },
+                    // Method 2: Direct fetch without CORS
+                    async () => {
+                        try {
+                            const response = await fetch(image.url, {
+                                method: 'GET',
+                                mode: 'no-cors'
+                            });
+
+                            if (response.type === 'opaque') {
+                                // For no-cors responses, we can't access the blob directly
+                                // So we'll open the image in a new tab for manual download
+                                window.open(image.url, '_blank');
+                                return true;
+                            }
+                            return false;
+                        } catch {
+                            return false;
+                        }
+                    },
+                    // Method 3: Canvas method with CORS
+                    async () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) return false;
+
+                        canvas.width = finalDimensions.width;
+                        canvas.height = finalDimensions.height;
+
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+
+                        return new Promise<boolean>((resolve) => {
+                            img.onload = () => {
+                                try {
+                                    // Calculate crop parameters
+                                    const cropX = (baseDimensions.width * cropSettings.x) / 100;
+                                    const cropY = (baseDimensions.height * cropSettings.y) / 100;
+                                    const cropWidth = (baseDimensions.width * cropSettings.width) / 100;
+                                    const cropHeight = (baseDimensions.height * cropSettings.height) / 100;
+
+                                    let sourceWidth = imageSize.width;
+                                    let sourceHeight = imageSize.height;
+                                    let sourceX = 0;
+                                    let sourceY = 0;
+
+                                    if (sizeMode !== 'original') {
+                                        const scaleX = imageSize.width / baseDimensions.width;
+                                        const scaleY = imageSize.height / baseDimensions.height;
+                                        sourceX = cropX * scaleX;
+                                        sourceY = cropY * scaleY;
+                                        sourceWidth = cropWidth * scaleX;
+                                        sourceHeight = cropHeight * scaleY;
+                                    } else {
+                                        sourceX = (imageSize.width * cropSettings.x) / 100;
+                                        sourceY = (imageSize.height * cropSettings.y) / 100;
+                                        sourceWidth = (imageSize.width * cropSettings.width) / 100;
+                                        sourceHeight = (imageSize.height * cropSettings.height) / 100;
+                                    }
+
+                                    ctx.drawImage(
+                                        img,
+                                        sourceX, sourceY, sourceWidth, sourceHeight,
+                                        0, 0, finalDimensions.width, finalDimensions.height
+                                    );
+
+                                    canvas.toBlob((blob) => {
+                                        if (blob) {
+                                            const url = URL.createObjectURL(blob);
+                                            const a = document.createElement('a');
+                                            a.href = url;
+                                            a.download = `nasa-${image.id}-${finalDimensions.width}x${finalDimensions.height}.jpg`;
+                                            a.style.display = 'none';
+                                            document.body.appendChild(a);
+                                            a.click();
+                                            document.body.removeChild(a);
+                                            URL.revokeObjectURL(url);
+                                            resolve(true);
+                                        } else {
+                                            resolve(false);
+                                        }
+                                    }, 'image/jpeg', 0.95);
+                                } catch {
+                                    resolve(false);
+                                }
+                            };
+                            img.onerror = () => resolve(false);
+                            img.src = image.url;
+                        });
+                    },
+                    // Method 4: Canvas method without CORS
+                    async () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) return false;
+
+                        canvas.width = finalDimensions.width;
+                        canvas.height = finalDimensions.height;
+
+                        const img = new Image();
+                        // Don't set crossOrigin for this attempt
+
+                        return new Promise<boolean>((resolve) => {
+                            img.onload = () => {
+                                try {
+                                    // Calculate crop parameters
+                                    const cropX = (baseDimensions.width * cropSettings.x) / 100;
+                                    const cropY = (baseDimensions.height * cropSettings.y) / 100;
+                                    const cropWidth = (baseDimensions.width * cropSettings.width) / 100;
+                                    const cropHeight = (baseDimensions.height * cropSettings.height) / 100;
+
+                                    let sourceWidth = imageSize.width;
+                                    let sourceHeight = imageSize.height;
+                                    let sourceX = 0;
+                                    let sourceY = 0;
+
+                                    if (sizeMode !== 'original') {
+                                        const scaleX = imageSize.width / baseDimensions.width;
+                                        const scaleY = imageSize.height / baseDimensions.height;
+                                        sourceX = cropX * scaleX;
+                                        sourceY = cropY * scaleY;
+                                        sourceWidth = cropWidth * scaleX;
+                                        sourceHeight = cropHeight * scaleY;
+                                    } else {
+                                        sourceX = (imageSize.width * cropSettings.x) / 100;
+                                        sourceY = (imageSize.height * cropSettings.y) / 100;
+                                        sourceWidth = (imageSize.width * cropSettings.width) / 100;
+                                        sourceHeight = (imageSize.height * cropSettings.height) / 100;
+                                    }
+
+                                    ctx.drawImage(
+                                        img,
+                                        sourceX, sourceY, sourceWidth, sourceHeight,
+                                        0, 0, finalDimensions.width, finalDimensions.height
+                                    );
+
+                                    canvas.toBlob((blob) => {
+                                        if (blob) {
+                                            const url = URL.createObjectURL(blob);
+                                            const a = document.createElement('a');
+                                            a.href = url;
+                                            a.download = `nasa-${image.id}-${finalDimensions.width}x${finalDimensions.height}.jpg`;
+                                            a.style.display = 'none';
+                                            document.body.appendChild(a);
+                                            a.click();
+                                            document.body.removeChild(a);
+                                            URL.revokeObjectURL(url);
+                                            resolve(true);
+                                        } else {
+                                            resolve(false);
+                                        }
+                                    }, 'image/jpeg', 0.95);
+                                } catch {
+                                    resolve(false);
+                                }
+                            };
+                            img.onerror = () => resolve(false);
+                            img.src = image.url;
+                        });
+                    }
+                ];
+
+                // Try each download method in sequence
+                for (const method of downloadMethods) {
+                    try {
+                        const success = await method();
+                        if (success) {
+                            return; // Successfully downloaded
+                        }
+                    } catch (error) {
+                        console.log('Download method failed:', error);
+                        continue; // Try next method
+                    }
                 }
-            } catch (directError) {
-                console.log('Direct download failed, trying canvas method:', directError);
+
+                // If all methods fail, open in new tab as final fallback
+                window.open(image.url, '_blank');
+                return;
             }
 
-            // Create a canvas to process the image with all edits
+            // For non-NASA images, use the original canvas method
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             if (!ctx) throw new Error('Could not get canvas context');
 
-            // Set canvas size to final dimensions
             canvas.width = finalDimensions.width;
             canvas.height = finalDimensions.height;
 
-            // Create image element and wait for it to load
             const img = new Image();
-            img.crossOrigin = 'anonymous'; // Handle CORS
+            img.crossOrigin = 'anonymous';
 
             await new Promise((resolve, reject) => {
                 img.onload = resolve;
-                img.onerror = (error) => {
-                    console.error('Image load error:', error);
-                    // Try without CORS for all images
-                    const img2 = new Image();
-                    img2.onload = resolve;
-                    img2.onerror = () => reject(new Error(`Failed to load ${image.provider} image`));
-                    img2.src = image.url;
-                };
+                img.onerror = () => reject(new Error('Failed to load image'));
                 img.src = image.url;
             });
 
@@ -537,30 +709,25 @@ export function ImageModal({
             let sourceY = 0;
 
             if (sizeMode !== 'original') {
-                // For resized images, we need to calculate the source area
                 const scaleX = imageSize.width / baseDimensions.width;
                 const scaleY = imageSize.height / baseDimensions.height;
-
                 sourceX = cropX * scaleX;
                 sourceY = cropY * scaleY;
                 sourceWidth = cropWidth * scaleX;
                 sourceHeight = cropHeight * scaleY;
             } else {
-                // For original size, use crop settings directly
                 sourceX = (imageSize.width * cropSettings.x) / 100;
                 sourceY = (imageSize.height * cropSettings.y) / 100;
                 sourceWidth = (imageSize.width * cropSettings.width) / 100;
                 sourceHeight = (imageSize.height * cropSettings.height) / 100;
             }
 
-            // Draw the cropped and resized image
             ctx.drawImage(
                 img,
-                sourceX, sourceY, sourceWidth, sourceHeight, // Source rectangle
-                0, 0, finalDimensions.width, finalDimensions.height // Destination rectangle
+                sourceX, sourceY, sourceWidth, sourceHeight,
+                0, 0, finalDimensions.width, finalDimensions.height
             );
 
-            // Convert canvas to blob and download
             canvas.toBlob((blob) => {
                 if (!blob) throw new Error('Could not create image blob');
 
@@ -568,7 +735,7 @@ export function ImageModal({
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = `${image.provider}-${image.id}-${finalDimensions.width}x${finalDimensions.height}.jpg`;
-                a.style.display = 'none'; // Hide the link
+                a.style.display = 'none';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -578,21 +745,7 @@ export function ImageModal({
         } catch (error) {
             console.error('Download failed:', error);
             // Final fallback: open in new tab for manual download
-            try {
-                // Try to open the original image URL
-                if (image.url) {
-                    window.open(image.url, '_blank');
-                } else if (image.link) {
-                    // Fallback to the link URL
-                    window.open(image.link, '_blank');
-                } else {
-                    throw new Error('No valid URL found for download');
-                }
-            } catch (fallbackError) {
-                console.error('All download methods failed:', fallbackError);
-                // Show user-friendly error message
-                alert('Unable to download image. Please try right-clicking on the image and selecting "Save image as..."');
-            }
+            window.open(image.url, '_blank');
         } finally {
             setIsDownloading(false);
         }
