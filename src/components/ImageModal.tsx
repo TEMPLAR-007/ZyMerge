@@ -471,34 +471,31 @@ export function ImageModal({
             const finalDimensions = getFinalDimensions();
             const baseDimensions = getBaseDimensions();
 
-            // Special handling for NASA images
-            if (image.provider === 'nasa') {
-                // For NASA images, try to download directly first
-                try {
-                    const response = await fetch(image.url, {
-                        method: 'GET',
-                        mode: 'cors',
-                        headers: {
-                            'Accept': 'image/*',
-                        }
-                    });
-
-                    if (response.ok) {
-                        const blob = await response.blob();
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `nasa-${image.id}-${finalDimensions.width}x${finalDimensions.height}.jpg`;
-                        a.style.display = 'none';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                        return;
+            // Try direct download first for all images
+            try {
+                const response = await fetch(image.url, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'image/*',
                     }
-                } catch (nasaError) {
-                    console.log('Direct NASA download failed, trying canvas method:', nasaError);
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${image.provider}-${image.id}-${finalDimensions.width}x${finalDimensions.height}.jpg`;
+                    a.style.display = 'none';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    return;
                 }
+            } catch (directError) {
+                console.log('Direct download failed, trying canvas method:', directError);
             }
 
             // Create a canvas to process the image with all edits
@@ -518,15 +515,11 @@ export function ImageModal({
                 img.onload = resolve;
                 img.onerror = (error) => {
                     console.error('Image load error:', error);
-                    // For NASA images, try without CORS
-                    if (image.provider === 'nasa') {
-                        const img2 = new Image();
-                        img2.onload = resolve;
-                        img2.onerror = () => reject(new Error('Failed to load NASA image'));
-                        img2.src = image.url;
-                    } else {
-                        reject(new Error('Failed to load image'));
-                    }
+                    // Try without CORS for all images
+                    const img2 = new Image();
+                    img2.onload = resolve;
+                    img2.onerror = () => reject(new Error(`Failed to load ${image.provider} image`));
+                    img2.src = image.url;
                 };
                 img.src = image.url;
             });
@@ -584,35 +577,21 @@ export function ImageModal({
 
         } catch (error) {
             console.error('Download failed:', error);
-            // Fallback to original image download with proper headers
+            // Final fallback: open in new tab for manual download
             try {
-                const response = await fetch(image.url, {
-                    method: 'GET',
-                    mode: 'cors',
-                    headers: {
-                        'Accept': 'image/*',
-                    }
-                });
-
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `${image.provider}-${image.id}-original.jpg`;
-                    a.style.display = 'none'; // Hide the link
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                } else {
-                    // Final fallback: open in new tab for manual download
+                // Try to open the original image URL
+                if (image.url) {
                     window.open(image.url, '_blank');
+                } else if (image.link) {
+                    // Fallback to the link URL
+                    window.open(image.link, '_blank');
+                } else {
+                    throw new Error('No valid URL found for download');
                 }
             } catch (fallbackError) {
-                console.error('Fallback download also failed:', fallbackError);
-                // Final fallback: open in new tab for manual download
-                window.open(image.url, '_blank');
+                console.error('All download methods failed:', fallbackError);
+                // Show user-friendly error message
+                alert('Unable to download image. Please try right-clicking on the image and selecting "Save image as..."');
             }
         } finally {
             setIsDownloading(false);

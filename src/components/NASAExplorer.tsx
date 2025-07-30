@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { ImageModal } from './ImageModal';
 import {
   Rocket,
   Star,
@@ -16,7 +17,6 @@ import {
   Loader2,
   ExternalLink,
   Search,
-  X,
   Globe,
   Telescope,
   Heart
@@ -925,70 +925,25 @@ export const NASAExplorer: React.FC = () => {
 
         {/* Image Modal */}
         {showImageModal && selectedImage && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-gray-900 border border-gray-700 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
-              <div className="sticky top-0 bg-gray-900 border-b border-gray-700 p-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-white">{selectedImage.title}</h3>
-                  <div className="flex items-center gap-2">
-                    {/* Favorite Button in Modal */}
-                    {isAuthenticated && (
-                      <Button
-                        onClick={() => handleToggleFavorite(selectedImage)}
-                        disabled={favoritingImages.has(selectedImage.id)}
-                        size="sm"
-                        className={`${isImageFavorited(selectedImage)
-                          ? 'bg-red-500 hover:bg-red-600 text-white'
-                          : 'bg-gray-700 hover:bg-gray-600 text-white'
-                          }`}
-                      >
-                        {favoritingImages.has(selectedImage.id) ? (
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        ) : (
-                          <Heart className={`h-4 w-4 mr-2 ${isImageFavorited(selectedImage) ? 'fill-current' : ''}`} />
-                        )}
-                        {isImageFavorited(selectedImage) ? 'Favorited' : 'Add to Favorites'}
-                      </Button>
-                    )}
-                    <Button
-                      onClick={() => setShowImageModal(false)}
-                      variant="ghost"
-                      size="sm"
-                    >
-                      <X className="h-5 w-5" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div className="p-6 space-y-4">
-                <img
-                  src={selectedImage.url}
-                  alt={selectedImage.title}
-                  className="w-full h-auto max-h-96 object-contain rounded-lg"
-                />
-                {selectedImage.description && (
-                  <p className="text-muted-foreground leading-relaxed">
-                    {selectedImage.description}
-                  </p>
-                )}
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>{selectedImage.center}</span>
-                  {selectedImage.date && (
-                    <span>{new Date(selectedImage.date).toLocaleDateString()}</span>
-                  )}
-                </div>
-                {selectedImage.keywords.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {selectedImage.keywords.slice(0, 8).map((keyword, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {keyword}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <ImageModal
+            image={{
+              provider: 'nasa',
+              id: selectedImage.id,
+              url: selectedImage.url,
+              thumb: selectedImage.thumb,
+              alt: selectedImage.title,
+              link: `https://images.nasa.gov/details-${selectedImage.id}`,
+              credit: selectedImage.center,
+              creditUrl: 'https://www.nasa.gov/'
+            }}
+            isOpen={showImageModal}
+            onClose={() => setShowImageModal(false)}
+            isFavorited={isImageFavorited(selectedImage)}
+            onToggleFavorite={() => handleToggleFavorite(selectedImage)}
+            isLoading={favoritingImages.has(selectedImage.id)}
+            isAuthenticated={isAuthenticated}
+            showFavoriteButton={true}
+          />
         )}
       </div>
     </div>
