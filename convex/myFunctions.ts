@@ -22,9 +22,20 @@ export const searchImages: ReturnType<typeof action> = action({
     let hourlyLimit = 100; // Default limit for free users
 
     if (userId) {
-      // Get user's tier and limits (for now, all users are free tier)
-      // TODO: Implement premium tier detection based on subscription
-      hourlyLimit = 100; // Free tier: 100 searches per hour
+      // Get user's subscription through query (actions can't access db directly)
+      const subscription = await ctx.runQuery(api.myFunctions.getUserSubscription, {});
+      const userTier = subscription?.tier || "free";
+
+      switch (userTier) {
+        case "premium":
+          hourlyLimit = 500; // Premium: 500 searches per hour
+          break;
+        case "pro":
+          hourlyLimit = 1000; // Pro: 1000 searches per hour
+          break;
+        default:
+          hourlyLimit = 100; // Free: 100 searches per hour
+      }
 
       // Get user's search window info
       const userWindow = await ctx.runQuery(api.cache.getUserSearchWindow, { userId });
@@ -192,32 +203,6 @@ export const searchImages: ReturnType<typeof action> = action({
         return await res.json();
       })
       .then((data: any) => {
-        // Debug: Log the first image to see the structure
-        if (data.hits && data.hits.length > 0) {
-          console.log("Pixabay first image structure:", {
-            id: data.hits[0].id,
-            webformatURL: data.hits[0].webformatURL,
-            largeImageURL: data.hits[0].largeImageURL,
-            imageURL: data.hits[0].imageURL,
-            previewURL: data.hits[0].previewURL,
-            tags: data.hits[0].tags,
-            user: data.hits[0].user
-          });
-
-          // Debug: Check what URLs are being mapped
-          const mappedImage = {
-            provider: "pixabay",
-            id: data.hits[0].id,
-            url: data.hits[0].webformatURL || data.hits[0].largeImageURL || data.hits[0].imageURL,
-            thumb: data.hits[0].previewURL || data.hits[0].webformatURL || data.hits[0].largeImageURL,
-            alt: data.hits[0].tags || data.hits[0].user || "Pixabay Image",
-            link: data.hits[0].pageURL,
-            credit: data.hits[0].user || "Unknown",
-            creditUrl: `https://pixabay.com/users/${data.hits[0].user}-${data.hits[0].user_id}/`,
-          };
-          console.log("Pixabay mapped image:", mappedImage);
-        }
-
         return {
           images: (data.hits || []).map((img: any) => ({
             provider: "pixabay",
@@ -300,6 +285,9 @@ export const addFavorite = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
+    // Ensure user has a subscription (will create free plan if needed)
+    await ctx.runMutation(api.myFunctions.ensureUserSubscription, {});
+
     const existing = await ctx.db
       .query("favorites")
       .withIndex("by_user_image", (q) =>
@@ -379,10 +367,26 @@ export const getUserSearchCount = query({
 
     const now = Date.now();
 
-    // Get user's tier and limits (for now, all users are free tier)
-    // TODO: Implement premium tier detection based on subscription
-    const userTier = "free";
-    const hourlyLimit = 100; // Free tier: 100 searches per hour
+    // Get user's subscription directly from database to avoid circular dependency
+    const subscription = await ctx.db
+      .query("userSubscriptions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .unique();
+
+    const userTier = subscription?.tier || "free";
+
+    // Set limits based on tier
+    let hourlyLimit: number;
+    switch (userTier) {
+      case "premium":
+        hourlyLimit = 500; // Premium: 500 searches per hour
+        break;
+      case "pro":
+        hourlyLimit = 1000; // Pro: 1000 searches per hour
+        break;
+      default:
+        hourlyLimit = 100; // Free: 100 searches per hour
+    }
 
     // Get user's search window info
     const userWindow: any = await ctx.runQuery(api.cache.getUserSearchWindow, { userId });
@@ -451,5 +455,516 @@ export const cleanupOldSearchRequests = internalMutation({
       deletedRequests: oldRequests.length,
       deletedWindows: oldWindows.length
     };
+  },
+});
+
+// User subscription management
+export const createUserSubscription = mutation({
+  args: {
+    userId: v.id("users"),
+    tier: v.optional(v.union(v.literal("free"), v.literal("premium"), v.literal("pro"))),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    // Check if user already has a subscription
+    const existing = await ctx.db
+      .query("userSubscriptions")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .unique();
+
+    if (existing) {
+      return existing._id; // User already has a subscription
+    }
+
+    // Create free plan subscription by default
+    const subscriptionId = await ctx.db.insert("userSubscriptions", {
+      userId: args.userId,
+      tier: args.tier || "free",
+      status: "active",
+      startDate: now,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return subscriptionId;
+  },
+});
+
+export const getUserSubscription = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+
+    const subscription = await ctx.db
+      .query("userSubscriptions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .unique();
+
+    // If no subscription exists, return default free subscription info
+    // The actual subscription will be created when user performs an action (mutation)
+    if (!subscription) {
+      return {
+        tier: "free" as const,
+        status: "active" as const,
+        startDate: Date.now(),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+    }
+
+    return subscription;
+  },
+});
+
+export const upgradeUserSubscription = mutation({
+  args: {
+    tier: v.union(v.literal("premium"), v.literal("pro")),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const now = Date.now();
+
+    const existing = await ctx.db
+      .query("userSubscriptions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .unique();
+
+    if (existing) {
+      // Update existing subscription
+      await ctx.db.patch(existing._id, {
+        tier: args.tier,
+        status: "active",
+        updatedAt: now,
+      });
+      return existing._id;
+    } else {
+      // Create new subscription
+      return await ctx.db.insert("userSubscriptions", {
+        userId,
+        tier: args.tier,
+        status: "active",
+        startDate: now,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+  },
+});
+
+// Function to ensure user has a subscription (called on first interaction)
+export const ensureUserSubscription = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+
+    const existing = await ctx.db
+      .query("userSubscriptions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .unique();
+
+    if (!existing) {
+      // Create free subscription for new user
+      const now = Date.now();
+      await ctx.db.insert("userSubscriptions", {
+        userId,
+        tier: "free",
+        status: "active",
+        startDate: now,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    return existing;
+  },
+});
+
+// Admin functions to view and manage user subscriptions
+export const getAllUserSubscriptions = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 50;
+
+    const subscriptions = await ctx.db
+      .query("userSubscriptions")
+      .order("desc")
+      .take(limit);
+
+    // Get user details for each subscription
+    const subscriptionsWithUsers = await Promise.all(
+      subscriptions.map(async (subscription) => {
+        const user = await ctx.db.get(subscription.userId);
+        return {
+          ...subscription,
+          user: user ? {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            createdAt: user._creationTime,
+          } : null,
+        };
+      })
+    );
+
+    return subscriptionsWithUsers;
+  },
+});
+
+export const getUsersByTier = query({
+  args: {
+    tier: v.union(v.literal("free"), v.literal("premium"), v.literal("pro")),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 50;
+
+    const subscriptions = await ctx.db
+      .query("userSubscriptions")
+      .withIndex("by_tier", (q) => q.eq("tier", args.tier))
+      .order("desc")
+      .take(limit);
+
+    // Get user details for each subscription
+    const usersWithSubscriptions = await Promise.all(
+      subscriptions.map(async (subscription) => {
+        const user = await ctx.db.get(subscription.userId);
+        return {
+          subscription,
+          user: user ? {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            createdAt: user._creationTime,
+          } : null,
+        };
+      })
+    );
+
+    return usersWithSubscriptions;
+  },
+});
+
+export const getSubscriptionStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const allSubscriptions = await ctx.db.query("userSubscriptions").collect();
+
+    const stats = {
+      total: allSubscriptions.length,
+      free: allSubscriptions.filter(s => s.tier === "free").length,
+      premium: allSubscriptions.filter(s => s.tier === "premium").length,
+      pro: allSubscriptions.filter(s => s.tier === "pro").length,
+      active: allSubscriptions.filter(s => s.status === "active").length,
+      cancelled: allSubscriptions.filter(s => s.status === "cancelled").length,
+      expired: allSubscriptions.filter(s => s.status === "expired").length,
+    };
+
+    return {
+      ...stats,
+      percentages: {
+        free: Math.round((stats.free / stats.total) * 100) || 0,
+        premium: Math.round((stats.premium / stats.total) * 100) || 0,
+        pro: Math.round((stats.pro / stats.total) * 100) || 0,
+      },
+    };
+  },
+});
+
+export const searchUsersByEmail = query({
+  args: {
+    email: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Get all users (since we can't directly search by email in the users table)
+    const users = await ctx.db.query("users").collect();
+
+    // Filter by email (case-insensitive partial match)
+    const matchingUsers = users.filter(user =>
+      user.email?.toLowerCase().includes(args.email.toLowerCase())
+    );
+
+    // Get subscription info for each matching user
+    const usersWithSubscriptions = await Promise.all(
+      matchingUsers.map(async (user) => {
+        const subscription = await ctx.db
+          .query("userSubscriptions")
+          .withIndex("by_user", (q) => q.eq("userId", user._id))
+          .unique();
+
+        return {
+          user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            createdAt: user._creationTime,
+          },
+          subscription: subscription || {
+            tier: "free",
+            status: "active",
+            startDate: Date.now(),
+          },
+        };
+      })
+    );
+
+    return usersWithSubscriptions;
+  },
+});
+
+// Admin function to manually change a user's subscription
+export const adminUpdateUserSubscription = mutation({
+  args: {
+    userId: v.id("users"),
+    tier: v.union(v.literal("free"), v.literal("premium"), v.literal("pro")),
+    status: v.optional(v.union(v.literal("active"), v.literal("cancelled"), v.literal("expired"))),
+  },
+  handler: async (ctx, args) => {
+    // Note: In a real app, you'd want to add admin authentication here
+    // const adminUserId = await getAuthUserId(ctx);
+    // if (!isAdmin(adminUserId)) throw new Error("Unauthorized");
+
+    const now = Date.now();
+
+    const existing = await ctx.db
+      .query("userSubscriptions")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .unique();
+
+    if (existing) {
+      // Update existing subscription
+      await ctx.db.patch(existing._id, {
+        tier: args.tier,
+        status: args.status || "active",
+        updatedAt: now,
+      });
+      return existing._id;
+    } else {
+      // Create new subscription
+      return await ctx.db.insert("userSubscriptions", {
+        userId: args.userId,
+        tier: args.tier,
+        status: args.status || "active",
+        startDate: now,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+  },
+});
+
+// Admin function to create free subscriptions for all existing users
+export const createSubscriptionsForAllUsers = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+
+    // Get all users
+    const allUsers = await ctx.db.query("users").collect();
+
+    let created = 0;
+    let alreadyExists = 0;
+
+    for (const user of allUsers) {
+      // Check if user already has a subscription
+      const existing = await ctx.db
+        .query("userSubscriptions")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .unique();
+
+      if (!existing) {
+        // Create free subscription for user
+        await ctx.db.insert("userSubscriptions", {
+          userId: user._id,
+          tier: "free",
+          status: "active",
+          startDate: now,
+          createdAt: now,
+          updatedAt: now,
+        });
+        created++;
+      } else {
+        alreadyExists++;
+      }
+    }
+
+    return {
+      totalUsers: allUsers.length,
+      subscriptionsCreated: created,
+      alreadyExisted: alreadyExists,
+      message: `Created ${created} free subscriptions for existing users`
+    };
+  },
+});
+
+// Admin function to bulk upgrade users by email list
+export const bulkUpgradeUsers = mutation({
+  args: {
+    emails: v.array(v.string()),
+    tier: v.union(v.literal("premium"), v.literal("pro")),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const results = [];
+
+    // Get all users to find matching emails
+    const allUsers = await ctx.db.query("users").collect();
+
+    for (const email of args.emails) {
+      const user = allUsers.find(u => u.email?.toLowerCase() === email.toLowerCase());
+
+      if (!user) {
+        results.push({ email, status: 'user_not_found' });
+        continue;
+      }
+
+      // Update or create subscription
+      const existing = await ctx.db
+        .query("userSubscriptions")
+        .withIndex("by_user", (q) => q.eq("userId", user._id))
+        .unique();
+
+      if (existing) {
+        await ctx.db.patch(existing._id, {
+          tier: args.tier,
+          status: "active",
+          updatedAt: now,
+        });
+        results.push({ email, status: 'upgraded', userId: user._id });
+      } else {
+        await ctx.db.insert("userSubscriptions", {
+          userId: user._id,
+          tier: args.tier,
+          status: "active",
+          startDate: now,
+          createdAt: now,
+          updatedAt: now,
+        });
+        results.push({ email, status: 'created_premium', userId: user._id });
+      }
+    }
+
+    return {
+      processed: args.emails.length,
+      results,
+      summary: {
+        upgraded: results.filter(r => r.status === 'upgraded').length,
+        created: results.filter(r => r.status === 'created_premium').length,
+        notFound: results.filter(r => r.status === 'user_not_found').length,
+      }
+    };
+  },
+});
+
+// Admin function to upgrade user by email (easier than finding user ID)
+export const upgradeUserByEmail = mutation({
+  args: {
+    email: v.string(),
+    tier: v.union(v.literal("premium"), v.literal("pro")),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    // Find user by email
+    const allUsers = await ctx.db.query("users").collect();
+    const user = allUsers.find(u => u.email?.toLowerCase() === args.email.toLowerCase());
+
+    if (!user) {
+      throw new Error(`User with email ${args.email} not found`);
+    }
+
+    // Update or create subscription
+    const existing = await ctx.db
+      .query("userSubscriptions")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .unique();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        tier: args.tier,
+        status: "active",
+        updatedAt: now,
+      });
+      return {
+        message: `✅ User ${args.email} upgraded to ${args.tier}`,
+        userId: user._id,
+        subscriptionId: existing._id
+      };
+    } else {
+      const subscriptionId = await ctx.db.insert("userSubscriptions", {
+        userId: user._id,
+        tier: args.tier,
+        status: "active",
+        startDate: now,
+        createdAt: now,
+        updatedAt: now,
+      });
+      return {
+        message: `✅ User ${args.email} upgraded to ${args.tier}`,
+        userId: user._id,
+        subscriptionId
+      };
+    }
+  },
+});
+
+// Admin function to view contact requests
+export const getContactRequests = query({
+  args: {
+    status: v.optional(v.union(v.literal("pending"), v.literal("processed"), v.literal("cancelled"))),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 50;
+
+    const requests = await ctx.db
+      .query("contactRequests")
+      .order("desc")
+      .take(limit);
+
+    // Get user details for each request
+    const requestsWithUsers = await Promise.all(
+      requests.map(async (request) => {
+        let user = null;
+        if (request.userId) {
+          user = await ctx.db.get(request.userId);
+        }
+
+        return {
+          ...request,
+          user: user ? {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            createdAt: user._creationTime,
+          } : null,
+        };
+      })
+    );
+
+    return requestsWithUsers;
+  },
+});
+
+// Get current user data
+export const getCurrentUser = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+
+    const user = await ctx.db.get(userId);
+    return user ? {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      createdAt: user._creationTime,
+    } : null;
   },
 });

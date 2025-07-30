@@ -1,10 +1,12 @@
-import { useConvexAuth } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { api } from "../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { CustomLogo } from "./Logo";
-import { Search, Heart, LogOut, Home, LogIn, Rocket, Bell } from "lucide-react";
-import { useState } from "react";
+import { Search, Heart, LogOut, Home, LogIn, Rocket, Bell, User, Crown, Zap, ChevronDown, Star } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { UpdatesModal } from "./UpdatesModal";
+import { ContactModal } from "./ContactModal";
 
 interface HeaderProps {
   currentView: "home" | "search" | "favorites" | "nasa";
@@ -16,6 +18,49 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
   const { isAuthenticated } = useConvexAuth();
   const { signOut } = useAuthActions();
   const [isUpdatesModalOpen, setIsUpdatesModalOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'premium' | 'pro'>('premium');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Get user subscription data
+  const userSubscription = useQuery(api.myFunctions.getUserSubscription, isAuthenticated ? {} : "skip");
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+  
+  const getTierIcon = (tier: string) => {
+    switch (tier) {
+      case 'premium': return <Crown className="h-4 w-4 text-yellow-500" />;
+      case 'pro': return <Zap className="h-4 w-4 text-purple-500" />;
+      default: return <User className="h-4 w-4 text-gray-500" />;
+    }
+  };
+  
+  const getTierColor = (tier: string) => {
+    switch (tier) {
+      case 'premium': return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
+      case 'pro': return 'text-purple-500 bg-purple-500/10 border-purple-500/20';
+      default: return 'text-gray-500 bg-gray-500/10 border-gray-500/20';
+    }
+  };
+  
+  const getTierLabel = (tier: string) => {
+    switch (tier) {
+      case 'premium': return 'Premium';
+      case 'pro': return 'Pro';
+      default: return 'Free';
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/40">
@@ -34,6 +79,7 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
         </div>
 
         <div className="flex items-center space-x-1 sm:space-x-2">
+          {/* Core Navigation - Main Features */}
           <Button
             variant={currentView === "home" ? "default" : "ghost"}
             size="sm"
@@ -101,28 +147,177 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
             )}
           </Button>
 
-          {isAuthenticated && (
-            <Button
-              variant={currentView === "favorites" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setCurrentView("favorites")}
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3"
-            >
-              <Heart className="h-4 w-4" />
-              <span className="hidden sm:inline">Favorites</span>
-            </Button>
-          )}
+          {/* Divider for visual separation */}
+          <div className="hidden md:block w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
 
+          {/* Community & Updates */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => window.open('https://github.com/TEMPLAR-007/ZyMerge', '_blank')}
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-colors"
+            title="Star us on GitHub"
+          >
+            <Star className="h-4 w-4" />
+            <span className="hidden lg:inline">Star</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsUpdatesModalOpen(true)}
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 relative group"
+            title="View recent updates and improvements"
+          >
+            <Bell className="h-4 w-4" />
+            <span className="hidden lg:inline">Updates</span>
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+          </Button>
+
+          {/* User Authentication - Always at the end */}
           {isAuthenticated ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => void signOut()}
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3"
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="hidden md:inline">Sign out</span>
-            </Button>
+            <div className="relative" ref={dropdownRef}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                {getTierIcon(userSubscription?.tier || 'free')}
+                <span className="hidden md:inline">Profile</span>
+                <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
+              </Button>
+
+              {/* Profile Dropdown */}
+              {isProfileDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-2 duration-200">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-3 mb-3">
+                      {getTierIcon(userSubscription?.tier || 'free')}
+                      <div>
+                        <h3 className="font-semibold text-sm">Your Plan</h3>
+                        <p className="text-xs text-muted-foreground">Current subscription</p>
+                      </div>
+                    </div>
+                    
+                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${getTierColor(userSubscription?.tier || 'free')}`}>
+                      {getTierIcon(userSubscription?.tier || 'free')}
+                      {getTierLabel(userSubscription?.tier || 'free')} Plan
+                    </div>
+                    
+                    {userSubscription?.tier === 'free' && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        100 searches per hour
+                      </p>
+                    )}
+                    {userSubscription?.tier === 'premium' && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        500 searches per hour
+                      </p>
+                    )}
+                    {userSubscription?.tier === 'pro' && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        1000 searches per hour
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="p-2">
+                    {/* Favorites - User's personal content */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`w-full justify-start text-left hover:bg-gray-50 dark:hover:bg-gray-800 ${currentView === "favorites" ? "bg-gray-100 dark:bg-gray-800" : ""}`}
+                      onClick={() => {
+                        setIsProfileDropdownOpen(false);
+                        setCurrentView("favorites");
+                      }}
+                    >
+                      <Heart className="h-4 w-4 mr-2" />
+                      My Favorites
+                    </Button>
+                    
+                    <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+                    
+                    {userSubscription?.tier === 'free' && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start text-left hover:bg-yellow-50 dark:hover:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400"
+                          onClick={() => {
+                            setIsProfileDropdownOpen(false);
+                            setSelectedPlan('premium');
+                            setContactModalOpen(true);
+                          }}
+                        >
+                          <Crown className="h-4 w-4 mr-2" />
+                          Upgrade to Premium
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start text-left hover:bg-purple-50 dark:hover:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                          onClick={() => {
+                            setIsProfileDropdownOpen(false);
+                            setSelectedPlan('pro');
+                            setContactModalOpen(true);
+                          }}
+                        >
+                          <Zap className="h-4 w-4 mr-2" />
+                          Upgrade to Pro
+                        </Button>
+                      </>
+                    )}
+                    
+                    {userSubscription?.tier === 'premium' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-left hover:bg-purple-50 dark:hover:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                        onClick={() => {
+                          setIsProfileDropdownOpen(false);
+                          setSelectedPlan('pro');
+                          setContactModalOpen(true);
+                        }}
+                      >
+                        <Zap className="h-4 w-4 mr-2" />
+                        Upgrade to Pro
+                      </Button>
+                    )}
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-left hover:bg-gray-50 dark:hover:bg-gray-800"
+                      onClick={() => {
+                        setIsProfileDropdownOpen(false);
+                        // TODO: Add account settings
+                        alert('Account settings coming soon!');
+                      }}
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Account Settings
+                    </Button>
+                    
+                    <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
+                      onClick={() => {
+                        setIsProfileDropdownOpen(false);
+                        void signOut();
+                      }}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <Button
               variant="default"
@@ -134,19 +329,6 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
               <span className="hidden md:inline">Sign in</span>
             </Button>
           )}
-
-          {/* Notification Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsUpdatesModalOpen(true)}
-            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 relative group"
-            title="View recent updates and improvements"
-          >
-            <Bell className="h-4 w-4" />
-            <span className="hidden sm:inline">Updates</span>
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-          </Button>
         </div>
       </div>
 
@@ -154,6 +336,13 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
         isOpen={isUpdatesModalOpen}
         onClose={() => setIsUpdatesModalOpen(false)}
         onNavigate={setCurrentView}
+      />
+
+      {/* Contact Modal */}
+      <ContactModal
+        isOpen={contactModalOpen}
+        onClose={() => setContactModalOpen(false)}
+        planType={selectedPlan}
       />
     </header>
   );

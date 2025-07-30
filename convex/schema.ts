@@ -44,4 +44,15 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_user", ["userId"]).index("by_tier", ["tier"]),
+
+  contactRequests: defineTable({
+    userId: v.optional(v.id("users")),
+    email: v.string(),
+    name: v.optional(v.string()),
+    requestedTier: v.union(v.literal("premium"), v.literal("pro")),
+    message: v.optional(v.string()),
+    status: v.union(v.literal("pending"), v.literal("processed"), v.literal("cancelled")),
+    createdAt: v.number(),
+    processedAt: v.optional(v.number()),
+  }).index("by_email", ["email"]).index("by_status", ["status"]),
 });

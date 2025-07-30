@@ -14,7 +14,7 @@ export function UpdatesModal({ isOpen, onClose, onNavigate }: UpdatesModalProps)
 
     // Default navigation function if none provided
     const handleNavigation = onNavigate || (() => {
-        console.log('No navigation function provided');
+        // Silent fallback for missing navigation
     });
 
     const textUpdates = [

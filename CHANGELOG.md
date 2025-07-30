@@ -1,95 +1,81 @@
 # Changelog
 
-## [Latest] - 2024-12-19
+All notable changes to ZyMerge will be documented in this file.
 
-### ✨ New Features
-- **Enhanced Rate Limiting System**
-  - Implemented rolling 1-hour windows for fair rate limiting
-  - Increased free tier limits from 30 to 100 searches per hour
-  - Added Premium tier with 500 searches per hour
-  - Clear visual indicators with countdown timers and progress bars
-  - Clock icon replaces emoji for better visibility
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-- **Route Persistence**
-  - URLs now save current page state (e.g., `?view=search`)
-  - Page reloads maintain current view instead of going to home
-  - Browser back/forward buttons work properly
-  - Shareable direct links to specific pages
+## [1.0.0] - 2025-01-30
 
-- **Compact Search Bar**
-  - Floating search bar appears when scrolling down
-  - Positioned under navbar in center with pill design
-  - Rate limit integration (disabled when limit reached)
-  - Enter key support for quick searching
-  - Go to top button included
+### 🎉 Initial Release
 
-### 🎨 UI/UX Improvements
-- **Enhanced Navbar Design**
-  - Reduced opacity for better blur effects
-  - Removed border for cleaner appearance
-  - More modern glass-morphism effect
-  - Better integration with page content
+#### Added
+- **Multi-Source Image Search**: Search across Unsplash, Pexels, Pixabay, and NASA simultaneously
+- **Smart Favorites System**: Save and organize favorite images with one-click
+- **Google OAuth Authentication**: Secure user authentication and account management
+- **NASA Space Explorer**: Dedicated section for space imagery and astronomical data
+- **Responsive Design**: Fully responsive interface for all device sizes
+- **Real-time Search**: Instant search results with optimized performance
+- **Cloud Storage**: Secure cloud-based favorites storage using Convex
+- **Modern UI**: Clean, intuitive interface built with React and Tailwind CSS
+- **Pricing Plans**: Free, Premium, and Pro tiers with different search limits
+- **Contact System**: Automated contact forms with email notifications
+- **Toast Notifications**: User-friendly feedback system
 
-- **Improved Rate Limit Display**
-  - Clear usage indicators (X/Y searches)
-  - Visual progress bars with color coding
-  - Countdown timers when limit reached
-  - Premium upgrade prompts
-  - Consistent across all search interfaces
+#### Technical Features
+- React 18 with TypeScript for type safety
+- Convex backend for real-time data and serverless functions
+- Tailwind CSS for responsive styling
+- Radix UI components for accessibility
+- Vite for fast development and building
+- ESLint and Prettier for code quality
 
-- **Better Visual Feedback**
-  - Clock icons instead of emojis
-  - Animated "New" badge in header
-  - Updates section on landing page
-  - Changelog button with notification dot
+#### API Integrations
+- Unsplash API for high-quality photography
+- Pexels API for stock photos
+- Pixabay API for diverse image collection
+- NASA API for space imagery and data
+- Google OAuth for authentication
+- Resend API for email notifications
 
-### 🔧 Technical Improvements
-- **URL-Based Routing**
-  - Implemented with URLSearchParams
-  - Popstate event handling for browser navigation
-  - Clean URL structure with view parameters
-  - Proper history management
-
-- **Rate Limit Architecture**
-  - Rolling window implementation
-  - User-specific search tracking
-  - Tiered limit system
-  - Automatic cleanup of old data
-
-### 📱 Responsive Design
-- **Mobile Optimizations**
-  - Compact search bar works on all screen sizes
-  - Responsive changelog cards
-  - Better touch targets
-  - Improved mobile navigation
-
-### 🚀 Performance
-- **Optimized Loading**
-  - Faster route transitions (300ms vs 800ms)
-  - Better state management
-  - Reduced unnecessary re-renders
-  - Improved caching system
-
-### 📝 Update Notification
-- **Modal-Based Changelog**
-  - Notification bell icon in header with animated dot
-  - Interactive modal with matte dark background for better aesthetics
-  - Clean list format for most updates (less graphical, more readable)
-  - Enhanced "Explore the Universe" card with modern animations and effects
-  - Clickable "Explore the Universe" card navigates to NASA route
-  - Auto-shows on first visit (2-second delay)
-  - Persistent storage prevents repeated shows
-  - Organized presentation with clear hierarchy
+### 🔧 Infrastructure
+- Convex database schema for users, favorites, and subscriptions
+- Environment-based configuration for different deployment stages
+- Automated email system for user communications
+- Rate limiting and usage tracking for API calls
 
 ---
 
-## Previous Updates
-- Initial release with basic image search functionality
-- Multi-source image integration (Unsplash, Pexels, Pixabay)
-- Favorites system with authentication
-- NASA Explorer integration
-- Basic filtering and pagination
+## Future Releases
+
+### Planned Features
+- [ ] Bulk image download functionality
+- [ ] Advanced search filters (color, orientation, size)
+- [ ] Image editing tools integration
+- [ ] Social sharing capabilities
+- [ ] API access for Pro users
+- [ ] Dark/light theme toggle
+- [ ] Keyboard shortcuts
+- [ ] Image collections and albums
+- [ ] Export functionality (PDF, ZIP)
+- [ ] AI-powered image recommendations
+
+### Under Consideration
+- [ ] Mobile app (React Native)
+- [ ] Browser extension
+- [ ] Slack/Discord integrations
+- [ ] Team collaboration features
+- [ ] Custom image sources
+- [ ] Advanced analytics dashboard
 
 ---
 
-*For detailed technical information, see the commit history and code comments.*
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for information on how to contribute to ZyMerge.
+
+## Support
+
+- 📧 Email: arefin.khan8364@gmail.com
+- 🐛 Issues: [GitHub Issues](https://github.com/TEMPLAR-007/ZyMerge/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/TEMPLAR-007/ZyMerge/discussions)
