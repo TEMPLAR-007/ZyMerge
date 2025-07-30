@@ -471,6 +471,36 @@ export function ImageModal({
             const finalDimensions = getFinalDimensions();
             const baseDimensions = getBaseDimensions();
 
+            // Special handling for NASA images
+            if (image.provider === 'nasa') {
+                // For NASA images, try to download directly first
+                try {
+                    const response = await fetch(image.url, {
+                        method: 'GET',
+                        mode: 'cors',
+                        headers: {
+                            'Accept': 'image/*',
+                        }
+                    });
+
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `nasa-${image.id}-${finalDimensions.width}x${finalDimensions.height}.jpg`;
+                        a.style.display = 'none';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        return;
+                    }
+                } catch (nasaError) {
+                    console.log('Direct NASA download failed, trying canvas method:', nasaError);
+                }
+            }
+
             // Create a canvas to process the image with all edits
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
@@ -486,7 +516,18 @@ export function ImageModal({
 
             await new Promise((resolve, reject) => {
                 img.onload = resolve;
-                img.onerror = reject;
+                img.onerror = (error) => {
+                    console.error('Image load error:', error);
+                    // For NASA images, try without CORS
+                    if (image.provider === 'nasa') {
+                        const img2 = new Image();
+                        img2.onload = resolve;
+                        img2.onerror = () => reject(new Error('Failed to load NASA image'));
+                        img2.src = image.url;
+                    } else {
+                        reject(new Error('Failed to load image'));
+                    }
+                };
                 img.src = image.url;
             });
 
@@ -545,19 +586,33 @@ export function ImageModal({
             console.error('Download failed:', error);
             // Fallback to original image download with proper headers
             try {
-                const response = await fetch(image.url);
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${image.provider}-${image.id}-original.jpg`;
-                a.style.display = 'none'; // Hide the link
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                const response = await fetch(image.url, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'image/*',
+                    }
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${image.provider}-${image.id}-original.jpg`;
+                    a.style.display = 'none'; // Hide the link
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                } else {
+                    // Final fallback: open in new tab for manual download
+                    window.open(image.url, '_blank');
+                }
             } catch (fallbackError) {
                 console.error('Fallback download also failed:', fallbackError);
+                // Final fallback: open in new tab for manual download
+                window.open(image.url, '_blank');
             }
         } finally {
             setIsDownloading(false);
