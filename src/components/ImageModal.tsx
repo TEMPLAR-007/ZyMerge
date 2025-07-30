@@ -534,6 +534,7 @@ export function ImageModal({
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = `${image.provider}-${image.id}-${finalDimensions.width}x${finalDimensions.height}.jpg`;
+                a.style.display = 'none'; // Hide the link
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -542,13 +543,22 @@ export function ImageModal({
 
         } catch (error) {
             console.error('Download failed:', error);
-            // Fallback to original image download
-            const a = document.createElement('a');
-            a.href = image.url;
-            a.download = `${image.provider}-${image.id}-original.jpg`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            // Fallback to original image download with proper headers
+            try {
+                const response = await fetch(image.url);
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${image.provider}-${image.id}-original.jpg`;
+                a.style.display = 'none'; // Hide the link
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (fallbackError) {
+                console.error('Fallback download also failed:', fallbackError);
+            }
         } finally {
             setIsDownloading(false);
         }
@@ -1018,14 +1028,19 @@ export function ImageModal({
 
                             {/* Download Button */}
                             <button
-                                onClick={() => {
-                                    void handleDownload();
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    if (!isDownloading) {
+                                        void handleDownload();
+                                    }
                                 }}
                                 disabled={isDownloading}
-                                className={`flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors ${isDownloading
-                                    ? 'bg-blue-400 cursor-not-allowed'
-                                    : 'bg-blue-600 hover:bg-blue-700'
+                                className={`flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-all duration-200 ${isDownloading
+                                    ? 'bg-blue-400 cursor-not-allowed opacity-75'
+                                    : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transform active:scale-95'
                                     }`}
+                                title={isDownloading ? "Downloading..." : "Download image"}
                             >
                                 {isDownloading ? (
                                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
