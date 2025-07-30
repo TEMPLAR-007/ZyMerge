@@ -191,8 +191,9 @@ export function ImageModal({
         const displayDimensions = getDisplayDimensions();
 
         // Calculate max dimensions that fit in the container
-        const containerMaxWidth = Math.min(window.innerWidth * 0.6, 800);
-        const containerMaxHeight = Math.min(window.innerHeight * 0.7, 600);
+        // Use more conservative sizing to ensure images fit well
+        const containerMaxWidth = Math.min(window.innerWidth * 0.5, 1000);
+        const containerMaxHeight = Math.min(window.innerHeight * 0.6, 800);
 
         let finalWidth = displayDimensions.width;
         let finalHeight = displayDimensions.height;
@@ -213,7 +214,9 @@ export function ImageModal({
             objectFit: sizeMode === 'custom' ? 'fill' : 'contain' as const,
             display: 'block',
             maxWidth: '100%',
-            maxHeight: '100%'
+            maxHeight: '100%',
+            // Ensure the image doesn't overflow its container
+            overflow: 'hidden'
         };
 
         const isCropped = cropSettings.x > 0 || cropSettings.y > 0 ||
@@ -759,13 +762,13 @@ export function ImageModal({
     return (
         <>
             <style>{sliderStyles}</style>
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90" onClick={onClose}>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={onClose}>
                 <div
-                    className="relative w-[90vw] h-[85vh] max-w-[1200px] max-h-[800px] bg-white dark:bg-gray-900 rounded-lg shadow-2xl overflow-hidden flex flex-col modal-content"
+                    className="relative w-full h-full max-w-[1400px] max-h-[90vh] bg-white dark:bg-gray-900 rounded-lg shadow-2xl overflow-hidden flex flex-col modal-content"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                         <div className="flex items-center gap-3 flex-wrap text-sm">
                             <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 rounded capitalize">
                                 {image.provider}
@@ -793,9 +796,9 @@ export function ImageModal({
                     </div>
 
                     {/* Main Content - Canva-like Layout */}
-                    <div className="flex flex-1 overflow-hidden">
+                    <div className="flex flex-1 overflow-hidden min-h-0">
                         {/* Left Panel - Tools */}
-                        <div className="w-80 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+                        <div className="w-80 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto flex-shrink-0">
                             <div className="p-4 space-y-6">
 
 
@@ -988,15 +991,15 @@ export function ImageModal({
                         </div>
 
                         {/* Right Panel - Image Preview */}
-                        <div className="flex-1 flex flex-col bg-gray-100 dark:bg-gray-800">
+                        <div className="flex-1 flex flex-col bg-gray-100 dark:bg-gray-800 min-h-0">
                             {/* Image Container */}
-                            <div className="flex-1 flex items-center justify-center p-6 overflow-auto">
+                            <div className="flex-1 flex items-center justify-center p-4 overflow-auto min-h-0">
                                 {loading ? (
                                     <div className="flex items-center justify-center">
                                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                                     </div>
                                 ) : (
-                                    <div className="relative inline-block">
+                                    <div className="relative inline-block max-w-full max-h-full">
                                         {showCropOverlay ? (
                                             // Crop mode - show original image with overlay
                                             <div className="relative">
@@ -1007,7 +1010,7 @@ export function ImageModal({
                                                     style={{
                                                         ...getImageStyle(),
                                                     }}
-                                                    className="rounded-lg shadow-lg select-none transition-transform duration-100"
+                                                    className="rounded-lg shadow-lg select-none transition-transform duration-100 max-w-full max-h-full object-contain"
                                                     draggable={false}
                                                 />
 
@@ -1124,7 +1127,7 @@ export function ImageModal({
                                         ) : (
                                             // Normal mode - show image with crop effect applied
                                             <div
-                                                className="relative overflow-hidden rounded-lg"
+                                                className="relative overflow-hidden rounded-lg max-w-full max-h-full"
                                             >
                                                 <img
                                                     src={image.url}
@@ -1132,7 +1135,7 @@ export function ImageModal({
                                                     style={{
                                                         ...getImageStyle(),
                                                     }}
-                                                    className="rounded-lg shadow-lg select-none transition-transform duration-100"
+                                                    className="rounded-lg shadow-lg select-none transition-transform duration-100 max-w-full max-h-full object-contain"
                                                     draggable={false}
                                                 />
                                             </div>
@@ -1151,7 +1154,7 @@ export function ImageModal({
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                    <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-shrink-0">
                         <div className="flex-1 min-w-0">
                             {image.alt && (
                                 <p className="text-sm text-gray-600 dark:text-gray-400 truncate mb-1">
