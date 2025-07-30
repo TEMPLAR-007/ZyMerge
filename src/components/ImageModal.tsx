@@ -223,6 +223,25 @@ export function ImageModal({
             cropSettings.width < 100 || cropSettings.height < 100;
 
         if (isCropped) {
+            // When cropped, make the cropped portion fill the entire viewport
+            // Calculate the scale factor to make the cropped area fill the container
+            const cropAspectRatio = (cropSettings.width / 100) / (cropSettings.height / 100);
+            const containerAspectRatio = containerMaxWidth / containerMaxHeight;
+
+            let scaleFactor;
+            if (cropAspectRatio > containerAspectRatio) {
+                // Crop is wider than container, scale by width
+                scaleFactor = containerMaxWidth / (finalWidth * (cropSettings.width / 100));
+            } else {
+                // Crop is taller than container, scale by height
+                scaleFactor = containerMaxHeight / (finalHeight * (cropSettings.height / 100));
+            }
+
+            // Apply the scale factor to make cropped area fill the container
+            style.width = finalWidth * scaleFactor;
+            style.height = finalHeight * scaleFactor;
+
+            // Apply clip path to show only the cropped area
             style.clipPath = `inset(${cropSettings.y}% ${100 - cropSettings.x - cropSettings.width}% ${100 - cropSettings.y - cropSettings.height}% ${cropSettings.x}%)`;
         }
 
