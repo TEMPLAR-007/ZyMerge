@@ -37,6 +37,26 @@ export function UpdatesModal({ isOpen, onClose, onNavigate }: UpdatesModalProps)
             icon: Star,
             title: "Premium Plans",
             description: "New tiered pricing with Free (100 searches/hour) and Premium (500 searches/hour) plans."
+        },
+        {
+            icon: CheckCircle,
+            title: "Professional Image Editor",
+            description: "Advanced cropping tool with presets (1:1, 3:4, 16:9), custom sizing, and precise image downloads."
+        },
+        {
+            icon: CheckCircle,
+            title: "Multi-Source Search",
+            description: "Search across Unsplash, Pexels, and Pixabay simultaneously with smart result caching."
+        },
+        {
+            icon: CheckCircle,
+            title: "Contact & Upgrade System",
+            description: "Easy upgrade requests with email notifications and admin management tools."
+        },
+        {
+            icon: CheckCircle,
+            title: "Enhanced UI/UX",
+            description: "Custom scrollbars, smooth animations, and improved responsive design throughout."
         }
     ];
 

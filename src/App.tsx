@@ -31,16 +31,13 @@ export default function App() {
 
   // Show updates modal on first visit
   useEffect(() => {
-    const hasSeenUpdates = localStorage.getItem('hasSeenUpdates_v1');
+    const hasSeenUpdates = localStorage.getItem('hasSeenUpdates_v2');
     if (!hasSeenUpdates) {
-      // Show loading first
-      setIsUpdatesLoading(true);
-
-      // Show modal after loading delay
+      setIsUpdatesLoading(true); // Show loading first
       const timer = setTimeout(() => {
         setIsUpdatesLoading(false);
         setShowUpdatesModal(true);
-        localStorage.setItem('hasSeenUpdates_v1', 'true');
+        localStorage.setItem('hasSeenUpdates_v2', 'true');
       }, 2500); // 2.5 seconds total for better UX
       return () => clearTimeout(timer);
     }
