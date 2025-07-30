@@ -63,7 +63,7 @@ export function UpdatesModal({ isOpen, onClose, onNavigate }: UpdatesModalProps)
     return (
         <div className="fixed inset-0 z-50 min-h-screen flex items-center justify-center p-4 bg-black/80">
             <div className="bg-gray-900/95 backdrop-blur-sm rounded-xl shadow-2xl max-w-3xl w-full max-h-[70vh] overflow-y-auto border border-gray-700/50 custom-scrollbar">
-                <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
+                <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-sm flex items-center justify-between p-6 border-b border-gray-700/50">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
                             <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
