@@ -31,7 +31,7 @@ export function SignInForm({
         email?: string;
         password?: string;
     }>({});
-    // const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
     const validateForm = async (formData: FormData) => {
         const errors: { email?: string; password?: string } = {};
@@ -132,22 +132,22 @@ export function SignInForm({
         }
     };
 
-    // const handleGoogleSignIn = async () => {
-    //     setIsGoogleLoading(true);
-    //     setError(null);
-    //     try {
-    //         await signIn("google");
-    //     } catch (error: any) {
-    //         setError("Failed to sign in with Google. Please try again.");
-    //     } finally {
-    //         setIsGoogleLoading(false);
-    //     }
-    // };
+    const handleGoogleSignIn = async () => {
+        setIsGoogleLoading(true);
+        setError(null);
+        try {
+            await signIn("google");
+        } catch (error: any) {
+            setError("Failed to sign in with Google. Please try again.");
+        } finally {
+            setIsGoogleLoading(false);
+        }
+    };
 
     const formFields = (
         <div className="space-y-4">
             {/* Google OAuth Button */}
-            {/* <Button
+            <Button
                 type="button"
                 variant="outline"
                 className="w-full h-11 text-base font-medium"
@@ -184,7 +184,7 @@ export function SignInForm({
                         Continue with Google
                     </>
                 )}
-            </Button> */}
+            </Button>
 
             {/* Divider */}
             <div className="relative">
