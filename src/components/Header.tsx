@@ -22,10 +22,13 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'premium' | 'pro'>('premium');
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
+
   // Get user subscription data
   const userSubscription = useQuery(api.myFunctions.getUserSubscription, isAuthenticated ? {} : "skip");
-  
+
+  // Get current user data
+  const currentUser = useQuery(api.myFunctions.getCurrentUser, isAuthenticated ? {} : "skip");
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -33,11 +36,11 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
         setIsProfileDropdownOpen(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-  
+
   const getTierIcon = (tier: string) => {
     switch (tier) {
       case 'premium': return <Crown className="h-4 w-4 text-yellow-500" />;
@@ -45,7 +48,7 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
       default: return <User className="h-4 w-4 text-gray-500" />;
     }
   };
-  
+
   const getTierColor = (tier: string) => {
     switch (tier) {
       case 'premium': return 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20';
@@ -53,7 +56,7 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
       default: return 'text-gray-500 bg-gray-500/10 border-gray-500/20';
     }
   };
-  
+
   const getTierLabel = (tier: string) => {
     switch (tier) {
       case 'premium': return 'Premium';
@@ -199,12 +202,12 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
                         <p className="text-xs text-muted-foreground">Current subscription</p>
                       </div>
                     </div>
-                    
+
                     <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${getTierColor(userSubscription?.tier || 'free')}`}>
                       {getTierIcon(userSubscription?.tier || 'free')}
                       {getTierLabel(userSubscription?.tier || 'free')} Plan
                     </div>
-                    
+
                     {userSubscription?.tier === 'free' && (
                       <p className="text-xs text-muted-foreground mt-2">
                         100 searches per hour
@@ -220,8 +223,18 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
                         1000 searches per hour
                       </p>
                     )}
+
+                    {/* User Email */}
+                    {currentUser?.email && (
+                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                        <p className="text-xs text-muted-foreground mb-1">Signed in as</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 break-all">
+                          {currentUser.email}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  
+
                   <div className="p-2">
                     {/* Favorites - User's personal content */}
                     <Button
@@ -236,9 +249,9 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
                       <Heart className="h-4 w-4 mr-2" />
                       My Favorites
                     </Button>
-                    
+
                     <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
-                    
+
                     {userSubscription?.tier === 'free' && (
                       <>
                         <Button
@@ -269,7 +282,7 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
                         </Button>
                       </>
                     )}
-                    
+
                     {userSubscription?.tier === 'premium' && (
                       <Button
                         variant="ghost"
@@ -285,7 +298,7 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
                         Upgrade to Pro
                       </Button>
                     )}
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"
@@ -299,9 +312,9 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
                       <User className="h-4 w-4 mr-2" />
                       Account Settings
                     </Button>
-                    
+
                     <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"

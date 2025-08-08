@@ -2,6 +2,82 @@ import { v } from "convex/values";
 import { query, mutation, action, internalMutation } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { api } from "./_generated/api";
+import validator from "email-validator";
+
+// Enhanced email validation using email-validator package
+export const validateEmailForSignup = action({
+  args: { email: v.string() },
+  returns: v.object({
+    isValid: v.boolean(),
+    reason: v.optional(v.string()),
+    suggestions: v.optional(v.array(v.string()))
+  }),
+  handler: async (_ctx, args) => {
+    const email = args.email.toLowerCase();
+
+    // Use email-validator package for comprehensive validation
+    if (!validator.validate(email)) {
+      return {
+        isValid: false,
+        reason: "Please enter a valid email address",
+        suggestions: ["Make sure to include @ and a valid domain (e.g., .com, .org)"]
+      };
+    }
+
+    // Check for disposable email domains
+    const domain = email.split('@')[1];
+    const disposableDomains = [
+      '10minutemail.com', 'tempmail.org', 'guerrillamail.com', 'mailinator.com',
+      'yopmail.com', 'throwaway.email', 'temp-mail.org', 'fakeinbox.com',
+      'sharklasers.com', 'getairmail.com', 'mailnesia.com', 'maildrop.cc',
+      'mailmetrash.com', 'trashmail.com', 'mailnull.com', 'spam4.me',
+      'bccto.me', 'chacuo.net', 'dispostable.com', 'mailnesia.com',
+      'mailinator.net', 'mailinator2.com', 'mailinator3.com', 'mailinator4.com',
+      'mailinator5.com', 'mailinator6.com', 'mailinator7.com', 'mailinator8.com',
+      'mailinator9.com', 'mailinator10.com', 'mailinator11.com', 'mailinator12.com',
+      'mailinator13.com', 'mailinator14.com', 'mailinator15.com', 'mailinator16.com',
+      'mailinator17.com', 'mailinator18.com', 'mailinator19.com', 'mailinator20.com',
+      'mailinator21.com', 'mailinator22.com', 'mailinator23.com', 'mailinator24.com',
+      'mailinator25.com', 'mailinator26.com', 'mailinator27.com', 'mailinator28.com',
+      'mailinator29.com', 'mailinator30.com', 'mailinator31.com', 'mailinator32.com',
+      'mailinator33.com', 'mailinator34.com', 'mailinator35.com', 'mailinator36.com',
+      'mailinator37.com', 'mailinator38.com', 'mailinator39.com', 'mailinator40.com',
+      'mailinator41.com', 'mailinator42.com', 'mailinator43.com', 'mailinator44.com',
+      'mailinator45.com', 'mailinator46.com', 'mailinator47.com', 'mailinator48.com',
+      'mailinator49.com', 'mailinator50.com', 'mailinator51.com', 'mailinator52.com',
+      'mailinator53.com', 'mailinator54.com', 'mailinator55.com', 'mailinator56.com',
+      'mailinator57.com', 'mailinator58.com', 'mailinator59.com', 'mailinator60.com',
+      'mailinator61.com', 'mailinator62.com', 'mailinator63.com', 'mailinator64.com',
+      'mailinator65.com', 'mailinator66.com', 'mailinator67.com', 'mailinator68.com',
+      'mailinator69.com', 'mailinator70.com', 'mailinator71.com', 'mailinator72.com',
+      'mailinator73.com', 'mailinator74.com', 'mailinator75.com', 'mailinator76.com',
+      'mailinator77.com', 'mailinator78.com', 'mailinator79.com', 'mailinator80.com',
+      'mailinator81.com', 'mailinator82.com', 'mailinator83.com', 'mailinator84.com',
+      'mailinator85.com', 'mailinator86.com', 'mailinator87.com', 'mailinator88.com',
+      'mailinator89.com', 'mailinator90.com', 'mailinator91.com', 'mailinator92.com',
+      'mailinator93.com', 'mailinator94.com', 'mailinator95.com', 'mailinator96.com',
+      'mailinator97.com', 'mailinator98.com', 'mailinator99.com', 'mailinator100.com'
+    ];
+
+    const fakeDomains = ['test.com', 'example.com', 'fake.com', 'invalid.com', 'nonexistent.com'];
+
+    if (disposableDomains.includes(domain)) {
+      return {
+        isValid: false,
+        reason: "Disposable email addresses are not allowed. Please use a real email address.",
+        suggestions: ["Use your personal or work email address"]
+      };
+    } else if (fakeDomains.includes(domain)) {
+      return {
+        isValid: false,
+        reason: "Please use a real email address that you own.",
+        suggestions: ["Use your actual email address, not a test domain"]
+      };
+    }
+
+    return { isValid: true };
+  }
+});
 
 export const searchImages: ReturnType<typeof action> = action({
   args: {
