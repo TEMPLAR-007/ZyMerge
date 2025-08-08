@@ -147,7 +147,7 @@ export function SignInForm({
     const formFields = (
         <div className="space-y-4">
             {/* Google OAuth Button */}
-            <Button
+            {/* <Button
                 type="button"
                 variant="outline"
                 className="w-full h-11 text-base font-medium"
@@ -184,7 +184,7 @@ export function SignInForm({
                         Continue with Google
                     </>
                 )}
-            </Button>
+            </Button> */}
 
             {/* Divider */}
             <div className="relative">
