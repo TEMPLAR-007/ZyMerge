@@ -197,10 +197,17 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
                   <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center gap-3 mb-3">
                       {getTierIcon(userSubscription?.tier || 'free')}
-                      <div>
-                        <h3 className="font-semibold text-sm">Your Plan</h3>
-                        <p className="text-xs text-muted-foreground">Current subscription</p>
-                      </div>
+
+                      {/* User Email */}
+                      {currentUser?.email && (
+                        <div >
+                          <p className="text-xs text-muted-foreground mb-1">Signed in as</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 break-all">
+                            {currentUser.email}
+                          </p>
+                        </div>
+                      )}
+
                     </div>
 
                     <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${getTierColor(userSubscription?.tier || 'free')}`}>
@@ -222,16 +229,6 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
                       <p className="text-xs text-muted-foreground mt-2">
                         1000 searches per hour
                       </p>
-                    )}
-
-                    {/* User Email */}
-                    {currentUser?.email && (
-                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                        <p className="text-xs text-muted-foreground mb-1">Signed in as</p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 break-all">
-                          {currentUser.email}
-                        </p>
-                      </div>
                     )}
                   </div>
 
