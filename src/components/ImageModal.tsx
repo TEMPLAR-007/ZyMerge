@@ -10,8 +10,8 @@ const sliderStyles = `
     border-radius: 50%;
     background: #3b82f6;
     cursor: pointer;
-    border: 2px solid #ffffff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border: 2px solid #1f2937;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
   }
 
   .slider::-moz-range-thumb {
@@ -20,17 +20,13 @@ const sliderStyles = `
     border-radius: 50%;
     background: #3b82f6;
     cursor: pointer;
-    border: 2px solid #ffffff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border: 2px solid #1f2937;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
   }
 
   .slider::-webkit-slider-track {
     height: 8px;
     border-radius: 4px;
-    background: #e5e7eb;
-  }
-
-  .dark .slider::-webkit-slider-track {
     background: #374151;
   }
 `;
@@ -779,13 +775,13 @@ export function ImageModal({
             <style>{sliderStyles}</style>
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={onClose}>
                 <div
-                    className="relative w-full h-full max-w-[1400px] max-h-[90vh] bg-white dark:bg-gray-900 rounded-lg shadow-2xl overflow-hidden flex flex-col modal-content"
+                    className="relative w-full h-full max-w-[1400px] max-h-[90vh] bg-gray-900 rounded-lg shadow-2xl overflow-hidden flex flex-col modal-content"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+                    <div className="flex items-center justify-between p-4 border-b border-gray-700 flex-shrink-0">
                         <div className="flex items-center gap-3 flex-wrap text-sm">
-                            <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 rounded capitalize">
+                            <span className="px-2 py-1 text-xs font-medium bg-gray-800 rounded capitalize">
                                 {image.provider}
                             </span>
                             {!loading && (
@@ -793,7 +789,7 @@ export function ImageModal({
                                     <span className="text-gray-600 dark:text-gray-400">
                                         Original: {imageSize.width} × {imageSize.height}
                                     </span>
-                                    <span className="text-blue-600 dark:text-blue-400">
+                                    <span className="text-blue-400">
                                         Base: {baseDimensions.width} × {baseDimensions.height}
                                     </span>
                                     <span className="text-green-600 dark:text-green-400">
@@ -804,7 +800,7 @@ export function ImageModal({
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                            className="p-1 hover:bg-gray-800 rounded-full transition-colors"
                         >
                             <X className="w-6 h-6" />
                         </button>
@@ -813,13 +809,13 @@ export function ImageModal({
                     {/* Main Content - Canva-like Layout */}
                     <div className="flex flex-1 overflow-hidden min-h-0">
                         {/* Left Panel - Tools */}
-                        <div className="w-80 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto flex-shrink-0">
+                        <div className="w-80 bg-gray-800 border-r border-gray-700 overflow-y-auto flex-shrink-0">
                             <div className="p-4 space-y-6">
 
 
                                 {/* Resize Control */}
                                 <div className="space-y-4">
-                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                    <h3 className="text-sm font-semibold text-gray-100 flex items-center gap-2">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                                         </svg>
@@ -829,7 +825,7 @@ export function ImageModal({
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-600 dark:text-gray-400">Width</span>
-                                            <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                                            <span className="text-sm font-medium text-blue-400">
                                                 {Math.round(getBaseDimensions().width)}px
                                             </span>
                                         </div>
@@ -844,7 +840,7 @@ export function ImageModal({
                                                 setCustomWidth(newWidth);
                                                 setSizeMode('custom');
                                             }}
-                                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                                            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
                                         />
                                         <div className="flex justify-between text-xs text-gray-500">
                                             <span>200px</span>
@@ -863,7 +859,7 @@ export function ImageModal({
                                                         setCustomWidth(Math.min(newWidth, imageSize.width || 2000));
                                                         setSizeMode('custom');
                                                     }}
-                                                    className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    className="w-full px-2 py-1 text-sm border border-gray-600 rounded bg-gray-700 text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                                     min="100"
                                                     max={imageSize.width || 2000}
                                                 />
@@ -879,7 +875,7 @@ export function ImageModal({
                                                         setCustomHeight(Math.min(newHeight, imageSize.height || 2000));
                                                         setSizeMode('custom');
                                                     }}
-                                                    className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    className="w-full px-2 py-1 text-sm border border-gray-600 rounded bg-gray-700 text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                                     min="100"
                                                     max={imageSize.height || 2000}
                                                 />
@@ -904,7 +900,7 @@ export function ImageModal({
 
                                 {/* Crop Controls */}
                                 <div className="space-y-4">
-                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                    <h3 className="text-sm font-semibold text-gray-100 flex items-center gap-2">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m0 0V1a1 1 0 011-1h2a1 1 0 011 1v2m0 0v14a1 1 0 01-1 1H8a1 1 0 01-1-1V6m0 0H5a1 1 0 01-1 1v2a1 1 0 001 1h2" />
                                         </svg>
@@ -927,7 +923,7 @@ export function ImageModal({
                                         }}
                                         className={`w-full px-4 py-2 text-sm rounded-lg transition-colors ${showCropOverlay
                                             ? 'bg-green-600 text-white shadow-sm'
-                                            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
+                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600'
                                             }`}
                                     >
                                         {showCropOverlay ? 'Hide Crop Tool' : 'Enable Crop Tool'}
@@ -953,7 +949,7 @@ export function ImageModal({
                                                         }
                                                         applyCropPreset(preset.key);
                                                     }}
-                                                    className="px-3 py-2 text-xs bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors"
+                                                    className="px-3 py-2 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg border border-gray-600 transition-colors"
                                                 >
                                                     {preset.label}
                                                 </button>
@@ -963,7 +959,7 @@ export function ImageModal({
                                 </div>
 
                                 {/* Action Buttons */}
-                                <div className="space-y-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+                                <div className="space-y-4 pt-6 border-t border-gray-700">
                                     <button
                                         onClick={resetAll}
                                         className="w-full px-3 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
@@ -973,8 +969,8 @@ export function ImageModal({
                                 </div>
 
                                 {/* Image Info */}
-                                <div className="space-y-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Image Info</h3>
+                                <div className="space-y-3 pt-6 border-t border-gray-700">
+                                    <h3 className="text-sm font-semibold text-gray-100">Image Info</h3>
                                     <div className="space-y-2 text-xs text-gray-600 dark:text-gray-400">
                                         <div className="flex justify-between">
                                             <span>Provider:</span>
@@ -994,7 +990,7 @@ export function ImageModal({
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span>Display:</span>
-                                                    <span className="font-medium text-blue-600 dark:text-blue-400">
+                                                    <span className="font-medium text-blue-400">
                                                         {getCurrentDisplayDimensions().width} × {getCurrentDisplayDimensions().height}
                                                     </span>
                                                 </div>
@@ -1006,7 +1002,7 @@ export function ImageModal({
                         </div>
 
                         {/* Right Panel - Image Preview */}
-                        <div className="flex-1 flex flex-col bg-gray-100 dark:bg-gray-800 min-h-0">
+                        <div className="flex-1 flex flex-col bg-gray-800 min-h-0">
                             {/* Image Container */}
                             <div className="flex-1 flex items-center justify-center p-4 overflow-auto min-h-0">
                                 {loading ? (
@@ -1126,7 +1122,7 @@ export function ImageModal({
                                                         {/* Crop dimensions display */}
                                                         {isDragging && (
                                                             <div
-                                                                className="absolute bg-white text-gray-900 text-xs px-2 py-1 rounded shadow-lg pointer-events-none z-20"
+                                                                className="absolute bg-gray-800 text-gray-100 text-xs px-2 py-1 rounded shadow-lg pointer-events-none z-20"
                                                                 style={{
                                                                     top: '-30px',
                                                                     left: '50%',
@@ -1169,7 +1165,7 @@ export function ImageModal({
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-shrink-0">
+                    <div className="flex items-center justify-between p-4 border-t border-gray-700 bg-gray-900 flex-shrink-0">
                         <div className="flex-1 min-w-0">
                             {image.alt && (
                                 <p className="text-sm text-gray-600 dark:text-gray-400 truncate mb-1">
@@ -1177,14 +1173,14 @@ export function ImageModal({
                                 </p>
                             )}
                             {image.credit && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                <p className="text-xs text-gray-400">
                                     Photo by{' '}
                                     {image.creditUrl ? (
                                         <a
                                             href={image.creditUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                                            className="text-blue-400 hover:underline font-medium"
                                         >
                                             {image.credit}
                                         </a>
@@ -1209,8 +1205,8 @@ export function ImageModal({
                                     }}
                                     disabled={isLoading}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${isLoading
-                                        ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-50'
-                                        : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                                        ? 'bg-gray-800 cursor-not-allowed opacity-50'
+                                        : 'hover:bg-gray-800'
                                         }`}
                                     title={isFavorited ? "Remove from favorites" : "Add to favorites"}
                                 >
@@ -1262,7 +1258,7 @@ export function ImageModal({
                                 href={image.link}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                                className="flex items-center gap-2 px-4 py-2 border border-gray-600 hover:bg-gray-800 rounded-lg transition-colors"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

@@ -46,7 +46,7 @@ export function ImageGrid({ images, favorites, onToggleFavorite, onImageClick, s
             </div>
             {/* Click overlay hint */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 dark:bg-black/90 rounded-full p-1.5 sm:p-2">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/90 rounded-full p-1.5 sm:p-2">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -61,7 +61,7 @@ export function ImageGrid({ images, favorites, onToggleFavorite, onImageClick, s
               onToggleFavorite(img);
             }}
             disabled={isLoading && loadingImageId === String(img.id)}
-            className={`absolute top-1 right-1 sm:top-2 sm:right-2 z-10 bg-white/80 dark:bg-black/60 rounded-full p-2 sm:p-2.5 shadow transition-transform min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center ${isLoading && loadingImageId === String(img.id)
+            className={`absolute top-1 right-1 sm:top-2 sm:right-2 z-10 bg-black/60 rounded-full p-2 sm:p-2.5 shadow transition-transform min-w-[32px] min-h-[32px] sm:min-w-[36px] sm:min-h-[36px] flex items-center justify-center ${isLoading && loadingImageId === String(img.id)
               ? 'cursor-not-allowed opacity-50'
               : 'hover:scale-110 active:scale-95'
               }`}

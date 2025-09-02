@@ -19,6 +19,11 @@ export function UpdatesModal({ isOpen, onClose, onNavigate }: UpdatesModalProps)
 
     const textUpdates = [
         {
+            icon: CheckCircle,
+            title: "Consistent Dark Theme",
+            description: "Fixed all light theme issues across components. Website now stays dark regardless of browser theme settings with improved image editing interface."
+        },
+        {
             icon: Clock,
             title: "Enhanced Rate Limiting",
             description: "Improved search limits with rolling windows. Free users get 100 searches/hour, Premium users get 500/hour."

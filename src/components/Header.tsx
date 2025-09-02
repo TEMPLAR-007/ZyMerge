@@ -75,7 +75,7 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
           >
             <CustomLogo size="sm" className="sm:hidden" showText={false} />
             <CustomLogo size="md" className="hidden sm:flex" />
-            <span className="hidden xs:inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:ring-blue-400/30">
+            <span className="hidden xs:inline-flex items-center rounded-md bg-blue-400/10 px-2 py-1 text-xs font-medium text-blue-400 ring-1 ring-inset ring-blue-400/30">
               Beta
             </span>
           </button>
@@ -151,7 +151,7 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
           </Button>
 
           {/* Divider for visual separation */}
-          <div className="hidden md:block w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+          <div className="hidden md:block w-px h-6 bg-gray-600 mx-1"></div>
 
           {/* Community & Updates */}
           <Button
@@ -184,7 +184,7 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 hover:bg-gray-800"
               >
                 {getTierIcon(userSubscription?.tier || 'free')}
                 <span className="hidden md:inline">Profile</span>
@@ -193,8 +193,8 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
 
               {/* Profile Dropdown */}
               {isProfileDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-2 duration-200">
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="absolute right-0 mt-2 w-64 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-2 duration-200">
+                  <div className="p-4 border-b border-gray-700">
                     <div className="flex items-center gap-3 mb-3">
                       {getTierIcon(userSubscription?.tier || 'free')}
 
@@ -202,7 +202,7 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
                       {currentUser?.email && (
                         <div >
                           <p className="text-xs text-muted-foreground mb-1">Signed in as</p>
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 break-all">
+                          <p className="text-sm font-medium text-gray-100 break-all">
                             {currentUser.email}
                           </p>
                         </div>
@@ -237,7 +237,7 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
                     <Button
                       variant="ghost"
                       size="sm"
-                      className={`w-full justify-start text-left hover:bg-gray-50 dark:hover:bg-gray-800 ${currentView === "favorites" ? "bg-gray-100 dark:bg-gray-800" : ""}`}
+                      className={`w-full justify-start text-left hover:bg-gray-800 ${currentView === "favorites" ? "bg-gray-800" : ""}`}
                       onClick={() => {
                         setIsProfileDropdownOpen(false);
                         setCurrentView("favorites");
@@ -247,14 +247,14 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
                       My Favorites
                     </Button>
 
-                    <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+                    <div className="border-t border-gray-700 my-2"></div>
 
                     {userSubscription?.tier === 'free' && (
                       <>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start text-left hover:bg-yellow-50 dark:hover:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400"
+                          className="w-full justify-start text-left hover:bg-yellow-900/20 text-yellow-400"
                           onClick={() => {
                             setIsProfileDropdownOpen(false);
                             setSelectedPlan('premium');
@@ -267,7 +267,7 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="w-full justify-start text-left hover:bg-purple-50 dark:hover:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                          className="w-full justify-start text-left hover:bg-purple-900/20 text-purple-400"
                           onClick={() => {
                             setIsProfileDropdownOpen(false);
                             setSelectedPlan('pro');
@@ -284,7 +284,7 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full justify-start text-left hover:bg-purple-50 dark:hover:bg-purple-900/20 text-purple-600 dark:text-purple-400"
+                        className="w-full justify-start text-left hover:bg-purple-900/20 text-purple-400"
                         onClick={() => {
                           setIsProfileDropdownOpen(false);
                           setSelectedPlan('pro');
@@ -299,7 +299,7 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start text-left hover:bg-gray-50 dark:hover:bg-gray-800"
+                      className="w-full justify-start text-left hover:bg-gray-800"
                       onClick={() => {
                         setIsProfileDropdownOpen(false);
                         // TODO: Add account settings
@@ -310,12 +310,12 @@ export function Header({ currentView, setCurrentView, onSignInClick }: HeaderPro
                       Account Settings
                     </Button>
 
-                    <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+                    <div className="border-t border-gray-700 my-2"></div>
 
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start text-left hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
+                      className="w-full justify-start text-left hover:bg-red-900/20 text-red-400"
                       onClick={() => {
                         setIsProfileDropdownOpen(false);
                         void signOut();

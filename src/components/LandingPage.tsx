@@ -137,12 +137,12 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
             </section>
 
             {/* Features Section */}
-            <section className="py-16 px-4 bg-gray-900/50">
+            <section className="py-16 px-4 bg-muted/50">
                 <div className="container mx-auto max-w-6xl">
                     <div>
                         <h2 className="text-3xl font-bold text-center mb-12">Why Choose ZyMerge?</h2>
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            <Card className="border-gray-700 hover:shadow-lg hover:scale-105 transition-all duration-300" style={{ backgroundColor: '#171717' }}>
+                            <Card className="bg-card border hover:shadow-lg hover:scale-105 transition-all duration-300">
                                 <CardHeader>
                                     <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4 hover:scale-110 transition-transform duration-200">
                                         <Zap className="h-6 w-6 text-purple-400" />
@@ -154,7 +154,7 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
                                 </CardHeader>
                             </Card>
 
-                            <Card className="border-gray-700 hover:shadow-lg hover:scale-105 transition-all duration-300" style={{ backgroundColor: '#171717' }}>
+                            <Card className="bg-card border hover:shadow-lg hover:scale-105 transition-all duration-300">
                                 <CardHeader>
                                     <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mb-4 hover:scale-110 transition-transform duration-200">
                                         <Heart className="h-6 w-6 text-green-400" />
@@ -166,7 +166,7 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
                                 </CardHeader>
                             </Card>
 
-                            <Card className="border-gray-700 hover:shadow-lg hover:scale-105 transition-all duration-300" style={{ backgroundColor: '#171717' }}>
+                            <Card className="bg-card border hover:shadow-lg hover:scale-105 transition-all duration-300">
                                 <CardHeader>
                                     <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center mb-4 hover:scale-110 transition-transform duration-200">
                                         <Zap className="h-6 w-6 text-orange-400" />
@@ -204,7 +204,7 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
 
                     <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
                         {/* Free Tier */}
-                        <Card className={`border-gray-700 hover:shadow-lg hover:scale-105 transition-all duration-300 ${isCurrentPlan("free") ? "ring-2 ring-green-500/50" : ""}`} style={{ backgroundColor: '#171717' }}>
+                        <Card className={`bg-card border hover:shadow-lg hover:scale-105 transition-all duration-300 ${isCurrentPlan("free") ? "ring-2 ring-green-500/50" : ""}`}>
                             <CardHeader className="text-center">
                                 <div className="flex items-center justify-center gap-2 mb-4">
                                     <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
@@ -257,7 +257,7 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
                         </Card>
 
                         {/* Premium Tier */}
-                        <Card className={`border-yellow-500/50 hover:shadow-lg hover:scale-105 transition-all duration-300 relative overflow-hidden ${isCurrentPlan("premium") ? "ring-2 ring-yellow-500/50" : ""}`} style={{ backgroundColor: '#171717' }}>
+                        <Card className={`bg-card border-yellow-500/50 hover:shadow-lg hover:scale-105 transition-all duration-300 relative overflow-hidden ${isCurrentPlan("premium") ? "ring-2 ring-yellow-500/50" : ""}`}>
                             <div className="absolute top-0 right-0 bg-gradient-to-l from-yellow-500 to-orange-500 text-white text-xs px-3 py-1 rounded-bl-lg font-medium">
                                 {isCurrentPlan("premium") ? "Your Plan" : "Most Popular"}
                             </div>
@@ -316,7 +316,7 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
                         </Card>
 
                         {/* Pro Tier */}
-                        <Card className={`border-purple-500/50 hover:shadow-lg hover:scale-105 transition-all duration-300 relative overflow-hidden ${isCurrentPlan("pro") ? "ring-2 ring-purple-500/50" : ""}`} style={{ backgroundColor: '#171717' }}>
+                        <Card className={`bg-card border-purple-500/50 hover:shadow-lg hover:scale-105 transition-all duration-300 relative overflow-hidden ${isCurrentPlan("pro") ? "ring-2 ring-purple-500/50" : ""}`}>
                             <div className="absolute top-0 right-0 bg-gradient-to-l from-purple-500 to-blue-500 text-white text-xs px-3 py-1 rounded-bl-lg font-medium">
                                 {isCurrentPlan("pro") ? "Your Plan" : "Power Users"}
                             </div>
@@ -395,7 +395,7 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
             </section>
 
             {/* How It Works */}
-            <section className="py-16 px-4 bg-gray-900/50">
+            <section className="py-16 px-4 bg-muted/50">
                 <div className="container mx-auto max-w-6xl">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl font-bold mb-4">How It Works</h2>
@@ -404,7 +404,7 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
                         </p>
 
                         <div className="grid md:grid-cols-3 gap-8">
-                            <Card className="border-gray-700 hover:shadow-lg hover:scale-105 transition-all duration-300 text-center" style={{ backgroundColor: '#171717' }}>
+                            <Card className="bg-card border hover:shadow-lg hover:scale-105 transition-all duration-300 text-center">
                                 <CardHeader>
                                     <div className="relative mx-auto mb-4">
                                         <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mx-auto hover:scale-110 transition-transform duration-200">
@@ -421,7 +421,7 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
                                 </CardHeader>
                             </Card>
 
-                            <Card className="border-gray-700 hover:shadow-lg hover:scale-105 transition-all duration-300 text-center" style={{ backgroundColor: '#171717' }}>
+                            <Card className="bg-card border hover:shadow-lg hover:scale-105 transition-all duration-300 text-center">
                                 <CardHeader>
                                     <div className="relative mx-auto mb-4">
                                         <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mx-auto hover:scale-110 transition-transform duration-200">
@@ -438,7 +438,7 @@ export function LandingPage({ onNavigateToSearch, onNavigateToFavorites, onSignI
                                 </CardHeader>
                             </Card>
 
-                            <Card className="border-gray-700 hover:shadow-lg hover:scale-105 transition-all duration-300 text-center" style={{ backgroundColor: '#171717' }}>
+                            <Card className="bg-card border hover:shadow-lg hover:scale-105 transition-all duration-300 text-center">
                                 <CardHeader>
                                     <div className="relative mx-auto mb-4">
                                         <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto hover:scale-110 transition-transform duration-200">
